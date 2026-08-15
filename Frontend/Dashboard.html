@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TitanV | Panel de Control</title> 
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="proyecto.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Estilos base para el Dashboard de administración */
+        body { display: flex; min-height: 100vh; background: #f4f6f9; color: #333; margin: 0; padding-top: 0; }
+        .sidebar { width: 260px; bg: #000; background: #000000; color: white; padding: 25px 15px; border-right: 2px solid #ffd60a; position: fixed; height: 100vh; }
+        .sidebar .logo { font-size: 24px; font-weight: 800; text-align: center; margin-bottom: 35px; }
+        .sidebar .logo span { color: #ffd60a; }
+        .sidebar-menu { display: flex; flex-direction: column; gap: 10px; }
+        .sidebar-menu a { color: #bbb; padding: 12px 15px; border-radius: 8px; display: flex; align-items: center; gap: 12px; text-decoration: none; font-weight: 600; transition: 0.3s; cursor: pointer; }
+        .sidebar-menu a:hover, .sidebar-menu a.active { color: #000; background: #ffd60a; }
+        .main-content { margin-left: 260px; p: 40px; width: calc(100% - 260px); padding: 40px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="logo">TITAN <span>V</span></div>
+        <div class="sidebar-menu">
+            <a onclick="switchTab('tab-proyectos')" id="btn-tab-proyectos" class="active"><i class="fas fa-hard-hat"></i> Proyectos de Obra</a>
+            <a onclick="switchTab('tab-materiales')" id="btn-tab-materiales"><i class="fas fa-boxes-stacked"></i> Inventario Insumos</a>
+            <a onclick="logout()"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        
+        <div id="tab-proyectos" class="tab-content active">
+            <div class="section-header">
+                <h2><i class="fas fa-project-diagram"></i> Panel de Proyectos Activos</h2>
+            </div>
+            <div class="grid">
+                <div class="card">
+                    <div class="card-header"><h3><i class="fas fa-plus-circle"></i> Crear Nuevo Proyecto</h3></div>
+                    <form id="formProyecto">
+                        <div class="input-group"><label>Nombre de la Obra</label><input type="text" id="proyNombre" placeholder="Ej: Edificio Calle 100" required></div>
+                        <div class="input-group"><label>Presupuesto Estimado (COP)</label><input type="number" id="proyPresupuesto" placeholder="Ej: 120000000" required></div>
+                        <div class="date-row">
+                            <div class="input-group"><label>Fecha Inicio</label><input type="date" id="proyFechaInicio" required></div>
+                            <div class="input-group"><label>Fecha Fin</label><input type="date" id="proyFechaFin" required></div>
+                        </div>
+                        <button type="submit" class="btn-save">Registrar e Iniciar Obra</button>
+                    </form>
+                </div>
+                <div class="card">
+                    <div class="card-header"><h3><i class="fas fa-list"></i> Obras en Ejecución (PostgreSQL)</h3></div>
+                    <div id="listaProyectos" class="project-container">
+                        </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-materiales" class="tab-content">
+            <div class="section-header">
+                <h2><i class="fas fa-boxes-stacked"></i> Control de Stock e Insumos</h2>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3><i class="fas fa-plus"></i> Registrar Entrada de Material</h3></div>
+                <form id="formMaterial" class="form-horizontal">
+                    <input type="text" id="matNombre" placeholder="Nombre Material" required>
+                    <input type="number" id="matCantidad" placeholder="Cantidad" required>
+                    <input type="text" id="matUnidad" placeholder="Unidad (Bultos, kg)" required>
+                    <input type="number" id="matPrecio" placeholder="Precio Unitario ($)" required>
+                    <button type="submit" class="btn-save">Agregar al Stock</button>
+                </form>
+            </div>
+            <div class="card table-card">
+                <table>
+                    <thead>
+                        <tr><th>ID</th><th>Material</th><th>Cantidad</th><th>Unidad</th><th>Precio U.</th><th>Acción</th></tr>
+                    </thead>
+                    <tbody id="listaMateriales"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>
