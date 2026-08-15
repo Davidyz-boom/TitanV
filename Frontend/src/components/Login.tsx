@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { CardAccion } from './CardAccion';
 import Registro from './Registro';
 
@@ -123,6 +123,17 @@ export const Login: React.FC<LoginProps> = ({
           </button>
 
         </form>
+
+        {/* === AQUÍ QUEDA EL BOTÓN DE GOOGLE EXACTAMENTE EN EL CUADRO ROJO === */}
+        <div 
+          id="google-login-button" 
+          style={{ 
+            width: '100%', 
+            marginTop: '12px', 
+            display: 'flex', 
+            justifyContent: 'center' 
+          }}
+        ></div>
 
         <div style={{
           marginTop: '20px',
