@@ -1,5 +1,7 @@
-node_modules/
-.env
-__pycache__/
+**/node_modules/
+**/__pycache__/
 *.pyc
-pasos_para_opencode.txt
+.env
+dist/
+build/
+*.log
