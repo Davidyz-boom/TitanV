@@ -45,6 +45,8 @@ const LoginPage = ({ onLoginSuccess }: LoginPageProps) => {
       localStorage.setItem('token', respuesta.data.token);
       localStorage.setItem('usuario_id', String(respuesta.data.usuario_id));
       localStorage.setItem('usuario_nombre', respuesta.data.nombre || 'Usuario');
+      localStorage.setItem('usuario_rol', String(respuesta.data.rol || 3));
+      localStorage.setItem('usuario_correo', correo.trim() || respuesta.data.correo || '');
       onLoginSuccess();
       navigate('/dashboard');
     } catch (error: any) {
@@ -79,7 +81,9 @@ const LoginPage = ({ onLoginSuccess }: LoginPageProps) => {
 
         localStorage.setItem('token', respuesta.data.token);
         localStorage.setItem('usuario_id', String(respuesta.data.usuario_id));
-        localStorage.setItem('usuario_nombre', respuesta.data.nombre);
+        localStorage.setItem('usuario_nombre', respuesta.data.nombre || userInfo.name);
+        localStorage.setItem('usuario_rol', String(respuesta.data.rol || 3));
+        localStorage.setItem('usuario_correo', respuesta.data.correo || userInfo.email);
 
         onLoginSuccess();
         navigate('/dashboard');

@@ -22,6 +22,7 @@ class ProyectoObra(Base):
     estado = Column(String(50), nullable=False)
     fecha_inicio = Column(Date, nullable=False)
     fecha_fin_estimada = Column(Date, nullable=False)
+    usuario_creador_id = Column(Integer, ForeignKey("usuarios.id_usuario", ondelete="SET NULL"), nullable=True)
 
     # Soft delete: si tiene fecha, está "eliminado" pero sigue en la base de
     # datos para poder auditarlo. Nunca se borra físicamente desde la app.

@@ -2,6 +2,7 @@ import os
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.core.database import Base, engine
@@ -20,15 +21,26 @@ from app.routers.turno_router import router as turno_router
 from app.routers.movimiento_router import router as movimiento_router
 from app.routers.evidencia_router import router as evidencia_router
 
+from app.views.login_view import obtener_pagina_login_html
+from sqlalchemy import text
+
 # Crear tablas automáticamente si la base de datos está disponible
 try:
     Base.metadata.create_all(bind=engine)
-    print("[Titan V API] Tablas de base de datos conectadas y sincronizadas exitosamente.")
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE materiales ADD COLUMN IF NOT EXISTS stock_total FLOAT DEFAULT 0.0;"))
+        conn.execute(text("ALTER TABLE evidencias_multimedia ADD COLUMN IF NOT EXISTS usuario_id INTEGER DEFAULT 1;"))
+        conn.execute(text("ALTER TABLE evidencias_multimedia ADD COLUMN IF NOT EXISTS nombre_archivo VARCHAR(255) DEFAULT 'archivo';"))
+        conn.execute(text("ALTER TABLE evidencias_multimedia ADD COLUMN IF NOT EXISTS descripcion VARCHAR(300);"))
+        conn.execute(text("ALTER TABLE evidencias_multimedia ADD COLUMN IF NOT EXISTS fecha_eliminacion TIMESTAMP;"))
+        conn.execute(text("ALTER TABLE proyectos_obra ADD COLUMN IF NOT EXISTS usuario_creador_id INTEGER;"))
+        conn.commit()
+    print("[Titan V API] Tablas y columnas de base de datos sincronizadas exitosamente.")
 except Exception as e:
     print(f"[Titan V API] Advertencia al conectar con la base de datos: {e}")
     print("Asegúrate de que el servicio de PostgreSQL esté iniciado y revisa la variable DATABASE_URL en tu archivo backend/.env")
 
-app = FastAPI(title="Titan V API")
+app = FastAPI(title="Titan V API - Sistema de Gestión de Obra")
 
 # Middleware para asegurar que los navegadores y clientes HTTP nunca guarden en caché
 # respuestas antiguas y siempre muestren los datos actualizados de la base de datos
@@ -66,6 +78,23 @@ os.makedirs(CARPETA_UPLOADS, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=CARPETA_UPLOADS), name="uploads")
 
 
-@app.get("/")
+# Vistas HTML servidas directamente desde Python con FastAPI
+@app.get("/", response_class=HTMLResponse)
 def read_root():
-    return {"status": "online"}
+    return obtener_pagina_login_html()
+
+
+@app.get("/login", response_class=HTMLResponse)
+def read_login():
+    return obtener_pagina_login_html()
+
+
+@app.get("/registro", response_class=HTMLResponse)
+def read_registro():
+    return obtener_pagina_login_html()
+
+
+@app.get("/api/status")
+def api_status():
+    return {"status": "online", "sistema": "Titan V"}
+

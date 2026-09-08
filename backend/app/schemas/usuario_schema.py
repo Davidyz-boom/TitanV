@@ -1,7 +1,7 @@
 from datetime import date
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from app.models import RolUsuario
 
@@ -15,9 +15,20 @@ class UsuarioBase(BaseModel):
 
 
 class UsuarioCreate(UsuarioBase):
-    """Esquema para el registro: exige la contraseña."""
+    """Esquema para el registro: exige obligatoriedad de datos y contraseña con letras y números o símbolos."""
 
     contrasena: str = Field(..., min_length=8, max_length=100, example="ClaveSegura123*")
+
+    @field_validator("contrasena")
+    @classmethod
+    def validar_contrasena_fuerte(cls, v: str) -> str:
+        if len(v) < 8:
+            raise ValueError("La contraseña debe tener al menos 8 caracteres.")
+        tiene_letras = any(c.isalpha() for c in v)
+        tiene_num_o_simbolo = any(c.isdigit() or not c.isalnum() for c in v)
+        if not (tiene_letras and tiene_num_o_simbolo):
+            raise ValueError("La contraseña debe contener letras y al menos un número o símbolo especial.")
+        return v
 
 
 class UsuarioUpdate(BaseModel):

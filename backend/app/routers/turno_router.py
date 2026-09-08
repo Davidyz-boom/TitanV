@@ -14,12 +14,13 @@ router = APIRouter(prefix="/turnos", tags=["Turnos y Asistencia"])
 @router.get("/", response_model=List[TurnoResponse])
 def get_turnos(
     proyecto_id: Optional[int] = Query(None, description="Filtrar por proyecto"),
+    usuario_id: Optional[int] = Query(None, description="Filtrar por usuario (para no-admins)"),
     incluir_eliminados: bool = False,
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
 ):
-    return asistencia_service.listar_turnos(db, proyecto_id, incluir_eliminados, skip, limit)
+    return asistencia_service.listar_turnos(db, proyecto_id, usuario_id, incluir_eliminados, skip, limit)
 
 
 @router.get("/{turno_id}", response_model=TurnoResponse)

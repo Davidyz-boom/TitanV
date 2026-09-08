@@ -33,6 +33,10 @@ def verificar_rol_proyecto(
     Devuelve el rol del usuario si la verificación pasa, por si el llamador lo
     necesita (ej. para lógica adicional según el rol).
     """
+    # Si el usuario es Administrador del sistema (rol=1), tiene acceso total a todos los proyectos
+    if getattr(usuario, "rol", None) == 1:
+        return RolColaborador.ARQUITECTO
+
     rol = obtener_rol_en_proyecto(db, usuario.id_usuario, proyecto_id)
 
     if rol is None:

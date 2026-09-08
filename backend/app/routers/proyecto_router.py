@@ -5,19 +5,21 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.models import RolProyecto, Usuario
-from app.schemas import ProyectoCreate, ProyectoResponse, ProyectoUpdate
+from app.schemas import AsignarMaterialProyecto, ProyectoCreate, ProyectoResponse, ProyectoUpdate
 from app.services import auth_service, colaborador_service, proyecto_service
 
 router = APIRouter(prefix="/proyectos", tags=["Proyectos"])
 
 
 def _exigir_arquitecto(db: Session, proyecto_id: int, usuario: Usuario) -> None:
-    """Solo el Arquitecto del proyecto puede invitar, cambiar roles o quitar colaboradores."""
+    """Solo el Arquitecto del proyecto o un Administrador puede invitar, cambiar roles o quitar colaboradores."""
+    if usuario.rol == 1:
+        return
     rol = colaborador_service.obtener_rol_de_usuario(db, proyecto_id, usuario.id_usuario)
     if rol != RolProyecto.ARQUITECTO:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Solo el Arquitecto del proyecto puede gestionar colaboradores.",
+            detail="Solo el Arquitecto del proyecto o un Administrador puede gestionar colaboradores.",
         )
 
 
@@ -29,9 +31,38 @@ def get_proyectos(
     limit: int = 100,
     db: Session = Depends(get_db),
 ):
-    """Si se pasa usuario_id, solo devuelve los proyectos donde ese usuario es colaborador.
+    """Si se pasa usuario_id y no es admin, solo devuelve los proyectos donde ese usuario es colaborador.
     incluir_eliminados=true muestra también los que fueron "eliminados" (soft delete)."""
     return proyecto_service.listar_proyectos(db, usuario_id, incluir_eliminados, skip, limit)
+
+
+@router.get("/{proyecto_id}/resumen")
+def get_proyecto_resumen(
+    proyecto_id: int,
+    db: Session = Depends(get_db),
+    usuario_actual: Usuario = Depends(auth_service.obtener_usuario_actual),
+):
+    """TV-PROY-RESUMEN: Retorna el resumen del proyecto con materiales asignados, obreros, turnos y fotos."""
+    resumen = proyecto_service.obtener_resumen_proyecto(db, proyecto_id)
+    if not resumen:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Proyecto no encontrado")
+    return resumen
+
+
+@router.post("/{proyecto_id}/materiales")
+def asignar_material_proyecto(
+    proyecto_id: int,
+    datos: AsignarMaterialProyecto,
+    db: Session = Depends(get_db),
+    usuario_actual: Usuario = Depends(auth_service.obtener_usuario_actual),
+):
+    """TV-PROY-MAT: Asigna la cantidad requerida de un material al proyecto."""
+    try:
+        return proyecto_service.asignar_material_a_proyecto(
+            db, proyecto_id, datos.material_id, datos.cantidad, usuario_actual.id_usuario
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.get("/{proyecto_id}", response_model=ProyectoResponse)

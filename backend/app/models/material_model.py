@@ -19,6 +19,7 @@ class Material(Base):
     id = Column(Integer, primary_key=True, index=True)
     nombre_material = Column(String(100), nullable=False)
     unidad_medida = Column(String(50), nullable=False)
+    stock_total = Column(Float, nullable=False, default=0.0)
     fecha_eliminacion = Column(DateTime, nullable=True, default=None)
 
     inventario = relationship("InventarioObra", back_populates="material", cascade="all, delete-orphan")

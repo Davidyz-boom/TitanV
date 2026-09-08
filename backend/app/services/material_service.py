@@ -60,3 +60,61 @@ def restaurar_material(db: Session, material_id: int) -> Optional[Material]:
 
     restaurar(db, material)
     return material
+
+
+def reabastecer_material(db: Session, material_id: int, cantidad: float) -> Optional[Material]:
+    """Aumenta la cantidad disponible en bodega para este tipo de material."""
+    material = obtener_material(db, material_id)
+    if not material:
+        return None
+
+    material.stock_total = float(material.stock_total or 0.0) + float(cantidad)
+    db.commit()
+    db.refresh(material)
+    return material
+
+
+def obtener_resumen_inventario(db: Session):
+    """Calcula para cada material: stock total registrado, colocado en proyectos y disponible en bodega."""
+    from app.models import InventarioObra, ProyectoObra
+
+    materiales = db.query(Material).filter(Material.fecha_eliminacion.is_(None)).order_by(Material.nombre_material).all()
+    resultado = []
+
+    for m in materiales:
+        inventarios = (
+            db.query(InventarioObra, ProyectoObra.nombre_proyecto)
+            .join(ProyectoObra, InventarioObra.proyecto_id == ProyectoObra.id)
+            .filter(
+                InventarioObra.material_id == m.id,
+                ProyectoObra.fecha_eliminacion.is_(None),
+            )
+            .all()
+        )
+
+        total_en_obras = sum(inv.InventarioObra.cantidad_disponible for inv in inventarios)
+        stock_total = float(m.stock_total or 0.0)
+        disponible_bodega = max(0.0, stock_total - total_en_obras)
+
+        proyectos_detalle = [
+            {
+                "proyecto_id": inv.InventarioObra.proyecto_id,
+                "proyecto_nombre": inv.nombre_proyecto,
+                "cantidad": float(inv.InventarioObra.cantidad_disponible),
+            }
+            for inv in inventarios
+            if inv.InventarioObra.cantidad_disponible > 0
+        ]
+
+        resultado.append({
+            "id": m.id,
+            "nombre_material": m.nombre_material,
+            "unidad_medida": m.unidad_medida,
+            "stock_total": stock_total,
+            "cantidad_asignada_proyectos": total_en_obras,
+            "stock_disponible_bodega": disponible_bodega,
+            "proyectos_detalle": proyectos_detalle,
+        })
+
+    return resultado
+

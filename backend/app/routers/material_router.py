@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.models import Usuario
-from app.schemas import MaterialCreate, MaterialResponse, MaterialUpdate
+from app.schemas import MaterialCreate, MaterialReabastecer, MaterialResponse, MaterialUpdate, ResumenInventarioItem
 from app.services import auth_service, material_service
 
 router = APIRouter(prefix="/materiales", tags=["Materiales"])
@@ -14,6 +14,26 @@ router = APIRouter(prefix="/materiales", tags=["Materiales"])
 @router.get("/", response_model=List[MaterialResponse])
 def get_materiales(incluir_eliminados: bool = False, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return material_service.listar_materiales(db, incluir_eliminados, skip, limit)
+
+
+@router.get("/inventario-resumen", response_model=List[ResumenInventarioItem])
+def get_resumen_inventario(db: Session = Depends(get_db)):
+    """Devuelve el inventario consolidado: stock total registrado, colocado en proyectos y disponible."""
+    return material_service.obtener_resumen_inventario(db)
+
+
+@router.post("/{material_id}/reabastecer", response_model=MaterialResponse)
+def reabastecer_material(
+    material_id: int,
+    datos: MaterialReabastecer,
+    db: Session = Depends(get_db),
+    usuario_actual: Usuario = Depends(auth_service.obtener_usuario_actual),
+):
+    """TV-MAT-REABASTECER: Agrega más cantidad física al inventario registrado del material."""
+    material = material_service.reabastecer_material(db, material_id, datos.cantidad)
+    if not material:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Material no encontrado")
+    return material
 
 
 @router.get("/{material_id}", response_model=MaterialResponse)

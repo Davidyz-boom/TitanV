@@ -10,6 +10,7 @@ import Productos from '../components/Productos';
 import TareasTab from '../components/TareasTab';
 import { TurnosTab } from '../components/TurnosTab';
 import { EvidenciasTab } from '../components/EvidenciasTab';
+import { CuentaFlotante } from '../components/CuentaFlotante';
 
 interface DashboardPageProps {
   onLogout: () => void;
@@ -17,13 +18,18 @@ interface DashboardPageProps {
 
 const DashboardPage = ({ onLogout }: DashboardPageProps) => {
   const navigate = useNavigate();
-  const [tabActual, setTabActual] = useState('inicio');
+  const rol = Number(localStorage.getItem('usuario_rol') || '3');
+  const usuarioId = localStorage.getItem('usuario_id') || '1';
+
+  // Si es operario (rol 3), entra directamente a su obra asignada
+  const [tabActual, setTabActual] = useState(rol === 3 ? 'proyectos' : 'inicio');
   const [tieneProyectos, setTieneProyectos] = useState(false);
   const cargandoProyectos = false;
 
   const verificarProyectos = async () => {
     try {
-      const respuesta = await fetchConToken('/proyectos/');
+      const url = rol === 1 ? '/proyectos/' : `/proyectos/?usuario_id=${usuarioId}`;
+      const respuesta = await fetchConToken(url);
       const proyectos = respuesta.ok ? await respuesta.json() : [];
       setTieneProyectos(Array.isArray(proyectos) && proyectos.length > 0);
     } catch {
@@ -52,15 +58,31 @@ const DashboardPage = ({ onLogout }: DashboardPageProps) => {
   const bloqueado = !cargandoProyectos && !tieneProyectos;
 
   const irA = (tab: string) => {
+    // Si es operario y trata de ir a un panel no permitido, mantener en proyectos
+    if (rol === 3 && !['proyectos', 'materiales', 'turnos', 'evidencias'].includes(tab)) {
+      setTabActual('proyectos');
+      return;
+    }
     setTabActual(tab);
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f4f6f9' }}>
-      <Sidebar activeTab={tabActual} onSelectTab={irA} onLogout={handleLogout} bloqueado={bloqueado} />
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f4f6f9', position: 'relative' }}>
+      <Sidebar activeTab={tabActual} onSelectTab={irA} onLogout={handleLogout} bloqueado={bloqueado} rol={rol} />
 
-      <div className="main-content">
-        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '16px' }}>
+      <div className="main-content" style={{ flex: 1, padding: '24px', paddingBottom: '90px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <div>
+            <h1 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+              {rol === 1 ? 'Panel Principal de Administración' : 'Panel de Gestión de Obra'}
+            </h1>
+            <span style={{ fontSize: '12px', color: '#64748b' }}>
+              {rol === 1
+                ? 'Control integral de obras, inventario general y usuarios'
+                : 'Visualización de avances, materiales asignados, turnos y evidencias'}
+            </span>
+          </div>
+
           <button
             onClick={refrescar}
             style={{
@@ -87,18 +109,21 @@ const DashboardPage = ({ onLogout }: DashboardPageProps) => {
         </div>
 
         <div key={`${tabActual}-${refreshKey}`}>
-          {tabActual === 'inicio' && (
+          {tabActual === 'inicio' && rol !== 3 && (
             <InicioTab onIrA={irA} tieneProyectos={tieneProyectos} cargando={cargandoProyectos} />
           )}
-          {tabActual === 'proyectos' && <ProyectosTab onProyectoCreado={verificarProyectos} />}
-          {tabActual === 'materiales' && <MaterialesTab />}
-          {tabActual === 'usuarios' && <Usuarios />}
-          {tabActual === 'productos' && <Productos />}
-          {tabActual === 'tareas' && <TareasTab />}
-          {tabActual === 'turnos' && <TurnosTab />}
-          {tabActual === 'evidencias' && <EvidenciasTab />}
+          {tabActual === 'proyectos' && <ProyectosTab onProyectoCreado={verificarProyectos} rol={rol} />}
+          {tabActual === 'materiales' && <MaterialesTab rol={rol} />}
+          {tabActual === 'usuarios' && rol === 1 && <Usuarios />}
+          {tabActual === 'productos' && rol !== 3 && <Productos />}
+          {tabActual === 'tareas' && rol !== 3 && <TareasTab />}
+          {tabActual === 'turnos' && <TurnosTab rol={rol} />}
+          {tabActual === 'evidencias' && <EvidenciasTab rol={rol} />}
         </div>
       </div>
+
+      {/* TARJETA DE CUENTA EN LA ESQUINA INFERIOR DERECHA (REQUERIMIENTO 5) */}
+      <CuentaFlotante onLogout={handleLogout} />
     </div>
   );
 };

@@ -25,13 +25,17 @@ from app.schemas.proyecto_schema import (
     ProyectoUpdate,
 )
 from app.schemas.material_schema import (
+    AsignarMaterialProyecto,
     InventarioResponse,
     KardexResponse,
     MaterialBase,
     MaterialCreate,
+    MaterialReabastecer,
     MaterialResponse,
     MaterialUpdate,
+    ProyectoDetalleMaterial,
     RegistroMovimiento,
+    ResumenInventarioItem,
 )
 from app.schemas.tarea_schema import (
     ComentarioCreate,

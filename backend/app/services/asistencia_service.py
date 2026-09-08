@@ -8,14 +8,32 @@ from app.schemas import TurnoCreate, TurnoUpdate
 
 
 def listar_turnos(
-    db: Session, proyecto_id: Optional[int] = None, incluir_eliminados: bool = False, skip: int = 0, limit: int = 100
+    db: Session,
+    proyecto_id: Optional[int] = None,
+    usuario_id: Optional[int] = None,
+    incluir_eliminados: bool = False,
+    skip: int = 0,
+    limit: int = 100,
 ):
+    from app.models import ProyectoObra, Usuario
+
     query = db.query(TurnoRelevo)
+
+    if usuario_id is not None:
+        usuario = db.query(Usuario).filter(Usuario.id_usuario == usuario_id).first()
+        # Si no es admin, solo ve los turnos de este usuario o de sus obras registradas
+        if usuario and usuario.rol != 1:
+            query = query.outerjoin(ProyectoObra, TurnoRelevo.proyecto_id == ProyectoObra.id).filter(
+                (TurnoRelevo.usuario_id == usuario_id) | (ProyectoObra.usuario_creador_id == usuario_id)
+            )
+
     if proyecto_id is not None:
         query = query.filter(TurnoRelevo.proyecto_id == proyecto_id)
+
     if not incluir_eliminados:
         query = sin_eliminados(query, TurnoRelevo)
-    return query.offset(skip).limit(limit).all()
+
+    return query.order_by(TurnoRelevo.fecha_turno.desc()).offset(skip).limit(limit).all()
 
 
 def obtener_turno(db: Session, turno_id: int, incluir_eliminados: bool = False) -> Optional[TurnoRelevo]:

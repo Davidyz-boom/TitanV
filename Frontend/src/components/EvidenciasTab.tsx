@@ -16,9 +16,13 @@ interface Proyecto {
   nombre_proyecto: string;
 }
 
+interface EvidenciasTabProps {
+  rol?: number;
+}
+
 const API_URL = 'http://localhost:8000';
 
-export const EvidenciasTab = () => {
+export const EvidenciasTab = ({ rol }: EvidenciasTabProps = {}) => {
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
   const [proyectoId, setProyectoId] = useState<number | ''>('');
   const [evidencias, setEvidencias] = useState<Evidencia[]>([]);
@@ -30,13 +34,21 @@ export const EvidenciasTab = () => {
   const [descripcion, setDescripcion] = useState('');
 
   const usuarioId = localStorage.getItem('usuario_id') || '1';
+  const rolEfectivo = rol !== undefined ? rol : Number(localStorage.getItem('usuario_rol') || '3');
+  const esAdmin = rolEfectivo === 1;
 
   const cargarProyectos = async () => {
-    const respuesta = await fetchConToken('/proyectos/');
+    // Si no es admin, solo carga las obras registradas por este usuario
+    const url = esAdmin ? '/proyectos/' : `/proyectos/?usuario_id=${usuarioId}`;
+    const respuesta = await fetchConToken(url);
     if (respuesta.ok) {
       const data = await respuesta.json();
       setProyectos(data);
-      if (data.length > 0) setProyectoId(data[0].id);
+      if (data.length > 0) {
+        setProyectoId(data[0].id);
+      } else {
+        setProyectoId('');
+      }
     }
   };
 
@@ -56,10 +68,14 @@ export const EvidenciasTab = () => {
 
   useEffect(() => {
     cargarProyectos();
-  }, []);
+  }, [rolEfectivo]);
 
   useEffect(() => {
-    if (proyectoId) cargarEvidencias(Number(proyectoId));
+    if (proyectoId) {
+      cargarEvidencias(Number(proyectoId));
+    } else {
+      setEvidencias([]);
+    }
   }, [proyectoId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -118,36 +134,66 @@ export const EvidenciasTab = () => {
         <h2><i className="fas fa-camera"></i> Evidencias de Obra</h2>
       </div>
 
-      <div className="input-group" style={{ maxWidth: '360px', marginBottom: '20px' }}>
-        <label>Proyecto</label>
-        <select value={proyectoId} onChange={(e) => setProyectoId(e.target.value ? Number(e.target.value) : '')}>
-          {proyectos.map((p) => <option key={p.id} value={p.id}>{p.nombre_proyecto}</option>)}
-        </select>
-      </div>
-
-      <div className="grid">
-        <div className="card">
-          <div className="card-header"><h3><i className="fas fa-upload"></i> Subir evidencia</h3></div>
-          <form onSubmit={handleSubmit}>
-            <div className="input-group">
-              <label>Archivo (foto, PDF o video)</label>
-              <input
-                id="input-archivo-evidencia"
-                type="file"
-                accept=".jpg,.jpeg,.png,.webp,.pdf,.mp4"
-                onChange={(e) => setArchivo(e.target.files?.[0] || null)}
-                required
-              />
-            </div>
-            <div className="input-group">
-              <label>Descripción (opcional)</label>
-              <input type="text" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} placeholder="Ej: Vaciado de placa nivel 2" maxLength={300} />
-            </div>
-            <button type="submit" className="btn-save" disabled={subiendo || !proyectoId}>
-              {subiendo ? 'Subiendo...' : 'Subir evidencia'}
-            </button>
-          </form>
+      {!esAdmin && (
+        <div style={{
+          padding: '10px 16px',
+          background: '#eff6ff',
+          border: '1px solid #bfdbfe',
+          borderRadius: '8px',
+          color: '#1e40af',
+          marginBottom: '16px',
+          fontSize: '13px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
+          <i className="fas fa-user-lock"></i>
+          <span>
+            <strong>Modo Operario:</strong> Visualizando y gestionando evidencias de tus obras registradas.
+          </span>
         </div>
+      )}
+
+      {proyectos.length === 0 ? (
+        <div className="card" style={{ padding: '32px', textAlign: 'center', background: '#fffbeb', border: '1px solid #fef3c7', borderRadius: '8px' }}>
+          <i className="fas fa-folder-plus" style={{ fontSize: '40px', color: '#f59e0b', marginBottom: '12px' }}></i>
+          <h3 style={{ margin: '0 0 8px 0', color: '#92400e' }}>Aún no tienes obras registradas</h3>
+          <p style={{ color: '#78350f', margin: 0, fontSize: '14px' }}>
+            Para subir y consultar el avance fotográfico, primero registra tu obra en la pestaña <strong>Proyectos de Obra</strong>.
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="input-group" style={{ maxWidth: '420px', marginBottom: '20px' }}>
+            <label>Seleccionar Obra ({proyectos.length} {proyectos.length === 1 ? 'disponible' : 'disponibles'}):</label>
+            <select value={proyectoId} onChange={(e) => setProyectoId(e.target.value ? Number(e.target.value) : '')}>
+              {proyectos.map((p) => <option key={p.id} value={p.id}>{p.nombre_proyecto}</option>)}
+            </select>
+          </div>
+
+          <div className="grid">
+            <div className="card">
+              <div className="card-header"><h3><i className="fas fa-upload"></i> Subir evidencia de avance</h3></div>
+              <form onSubmit={handleSubmit}>
+                <div className="input-group">
+                  <label>Archivo (foto, PDF o video) *</label>
+                  <input
+                    id="input-archivo-evidencia"
+                    type="file"
+                    accept=".jpg,.jpeg,.png,.webp,.pdf,.mp4"
+                    onChange={(e) => setArchivo(e.target.files?.[0] || null)}
+                    required
+                  />
+                </div>
+                <div className="input-group">
+                  <label>Descripción del avance (opcional)</label>
+                  <input type="text" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} placeholder="Ej: Vaciado de placa nivel 2 finalizado" maxLength={300} />
+                </div>
+                <button type="submit" className="btn-save" disabled={subiendo || !proyectoId}>
+                  {subiendo ? 'Subiendo...' : 'Subir evidencia'}
+                </button>
+              </form>
+            </div>
 
         <div className="card">
           <div className="card-header"><h3><i className="fas fa-images"></i> Evidencias del proyecto</h3></div>
@@ -187,6 +233,8 @@ export const EvidenciasTab = () => {
           </div>
         </div>
       </div>
-    </div>
-  );
+    </>
+  )}
+</div>
+);
 };
