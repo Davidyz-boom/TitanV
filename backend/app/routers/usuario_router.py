@@ -26,7 +26,6 @@ def _exigir_admin(current_user: Usuario):
 def get_usuarios(
     skip: int = 0,
     limit: int = 100,
-    current_user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     return usuario_service.listar_usuarios(db, skip, limit)

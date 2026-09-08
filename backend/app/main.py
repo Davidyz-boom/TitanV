@@ -1,6 +1,6 @@
 import os
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
@@ -29,6 +29,16 @@ except Exception as e:
     print("Asegúrate de que el servicio de PostgreSQL esté iniciado y revisa la variable DATABASE_URL en tu archivo backend/.env")
 
 app = FastAPI(title="Titan V API")
+
+# Middleware para asegurar que los navegadores y clientes HTTP nunca guarden en caché
+# respuestas antiguas y siempre muestren los datos actualizados de la base de datos
+@app.middleware("http")
+async def add_no_cache_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 # Configuración de CORS (necesaria para que el frontend, servido desde otro origen, pueda llamar a la API)
 app.add_middleware(

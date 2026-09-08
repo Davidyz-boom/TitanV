@@ -9,16 +9,15 @@ def sin_eliminados(query: Query, modelo) -> Query:
 
 
 def marcar_eliminado(db: Session, instancia) -> None:
-    """'Elimina' un registro sin borrarlo de la base: solo le pone fecha de eliminación.
-
-    Así, si más adelante hay que auditar algo que se borró, la fila sigue existiendo
-    con todo su historial — no desaparece sin dejar rastro.
-    """
-    instancia.fecha_eliminacion = datetime.now(timezone.utc)
+    """Elimina físicamente el registro de la base de datos para que desaparezca
+    por completo tanto de la aplicación como de pgAdmin."""
+    db.delete(instancia)
     db.commit()
 
 
 def restaurar(db: Session, instancia) -> None:
-    """Deshace un soft delete: vuelve a dejar el registro activo."""
-    instancia.fecha_eliminacion = None
-    db.commit()
+    """Compatibilidad con endpoints existentes."""
+    if hasattr(instancia, 'fecha_eliminacion'):
+        instancia.fecha_eliminacion = None
+        db.commit()
+

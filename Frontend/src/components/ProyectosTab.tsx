@@ -34,7 +34,7 @@ export const ProyectosTab = ({ onProyectoCreado }: ProyectosTabProps = {}) => {
     setCargando(true);
     setError('');
     try {
-      const respuesta = await fetchConToken(`/proyectos/?usuario_id=${usuarioId}`);
+      const respuesta = await fetchConToken('/proyectos/');
       if (!respuesta.ok) throw new Error('No se pudieron cargar los proyectos.');
       setProyectos(await respuesta.json());
     } catch (err: any) {

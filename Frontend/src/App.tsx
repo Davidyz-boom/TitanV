@@ -7,7 +7,7 @@ import './App.css';
 
 // Componente interno para manejar la redirección DESPUÉS de que el estado cambie
 function AppRoutes() {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => Boolean(localStorage.getItem('token')));
   const navigate = useNavigate();
 
   const handleLoginSuccess = () => {

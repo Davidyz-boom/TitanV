@@ -19,20 +19,15 @@ const DashboardPage = ({ onLogout }: DashboardPageProps) => {
   const navigate = useNavigate();
   const [tabActual, setTabActual] = useState('inicio');
   const [tieneProyectos, setTieneProyectos] = useState(false);
-  const [cargandoProyectos, setCargandoProyectos] = useState(true);
-
-  const usuarioId = localStorage.getItem('usuario_id') || '1';
+  const cargandoProyectos = false;
 
   const verificarProyectos = async () => {
     try {
-      const respuesta = await fetchConToken(`/proyectos/?usuario_id=${usuarioId}`);
+      const respuesta = await fetchConToken('/proyectos/');
       const proyectos = respuesta.ok ? await respuesta.json() : [];
       setTieneProyectos(Array.isArray(proyectos) && proyectos.length > 0);
     } catch {
-      // Si falla la verificación, no bloqueamos al usuario de más: lo dejamos pasar.
       setTieneProyectos(true);
-    } finally {
-      setCargandoProyectos(false);
     }
   };
 
@@ -47,10 +42,16 @@ const DashboardPage = ({ onLogout }: DashboardPageProps) => {
     navigate('/');
   };
 
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const refrescar = () => {
+    setRefreshKey((prev) => prev + 1);
+    verificarProyectos();
+  };
+
   const bloqueado = !cargandoProyectos && !tieneProyectos;
 
   const irA = (tab: string) => {
-    if (bloqueado && tab !== 'inicio' && tab !== 'proyectos') return;
     setTabActual(tab);
   };
 
@@ -59,18 +60,44 @@ const DashboardPage = ({ onLogout }: DashboardPageProps) => {
       <Sidebar activeTab={tabActual} onSelectTab={irA} onLogout={handleLogout} bloqueado={bloqueado} />
 
       <div className="main-content">
-        {tabActual === 'inicio' && (
-          <InicioTab onIrA={irA} tieneProyectos={tieneProyectos} cargando={cargandoProyectos} />
-        )}
-        {/* Proyectos siempre queda accesible: es la única forma de desbloquear el resto */}
-        {tabActual === 'proyectos' && <ProyectosTab onProyectoCreado={verificarProyectos} />}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '16px' }}>
+          <button
+            onClick={refrescar}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              backgroundColor: '#ffffff',
+              color: '#1f2937',
+              border: '1px solid #e5e7eb',
+              borderRadius: '8px',
+              padding: '8px 16px',
+              fontSize: '13px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+              transition: 'background-color 0.2s',
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#f9fafb')}
+            onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#ffffff')}
+            title="Sincronizar cambios recientes de la base de datos"
+          >
+            <i className="fas fa-sync-alt" style={{ color: '#eab308' }}></i> Actualizar datos
+          </button>
+        </div>
 
-        {!bloqueado && tabActual === 'materiales' && <MaterialesTab />}
-        {!bloqueado && tabActual === 'usuarios' && <Usuarios />}
-        {!bloqueado && tabActual === 'productos' && <Productos />}
-        {!bloqueado && tabActual === 'tareas' && <TareasTab />}
-        {!bloqueado && tabActual === 'turnos' && <TurnosTab />}
-        {!bloqueado && tabActual === 'evidencias' && <EvidenciasTab />}
+        <div key={`${tabActual}-${refreshKey}`}>
+          {tabActual === 'inicio' && (
+            <InicioTab onIrA={irA} tieneProyectos={tieneProyectos} cargando={cargandoProyectos} />
+          )}
+          {tabActual === 'proyectos' && <ProyectosTab onProyectoCreado={verificarProyectos} />}
+          {tabActual === 'materiales' && <MaterialesTab />}
+          {tabActual === 'usuarios' && <Usuarios />}
+          {tabActual === 'productos' && <Productos />}
+          {tabActual === 'tareas' && <TareasTab />}
+          {tabActual === 'turnos' && <TurnosTab />}
+          {tabActual === 'evidencias' && <EvidenciasTab />}
+        </div>
       </div>
     </div>
   );

@@ -8,11 +8,14 @@ export const fetchConToken = async (
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
+    "Cache-Control": "no-cache, no-store, must-revalidate",
+    "Pragma": "no-cache",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(options.headers as Record<string, string>),
   };
 
   const response = await fetch(`${API_URL}${endpoint}`, {
+    cache: "no-store",
     ...options,
     headers,
   });
