@@ -4,8 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.models import Usuario
 from app.schemas import MaterialCreate, MaterialResponse, MaterialUpdate
-from app.services import material_service
+from app.services import auth_service, material_service
 
 router = APIRouter(prefix="/materiales", tags=["Materiales"])
 
@@ -24,12 +25,21 @@ def get_material(material_id: int, incluir_eliminados: bool = False, db: Session
 
 
 @router.post("/", response_model=MaterialResponse, status_code=status.HTTP_201_CREATED)
-def create_material(material: MaterialCreate, db: Session = Depends(get_db)):
+def create_material(
+    material: MaterialCreate,
+    db: Session = Depends(get_db),
+    usuario_actual: Usuario = Depends(auth_service.obtener_usuario_actual),
+):
     return material_service.crear_material(db, material)
 
 
 @router.put("/{material_id}", response_model=MaterialResponse)
-def update_material(material_id: int, material_actualizado: MaterialUpdate, db: Session = Depends(get_db)):
+def update_material(
+    material_id: int,
+    material_actualizado: MaterialUpdate,
+    db: Session = Depends(get_db),
+    usuario_actual: Usuario = Depends(auth_service.obtener_usuario_actual),
+):
     material = material_service.actualizar_material(db, material_id, material_actualizado)
     if not material:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Material no encontrado")
@@ -37,14 +47,22 @@ def update_material(material_id: int, material_actualizado: MaterialUpdate, db: 
 
 
 @router.delete("/{material_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_material(material_id: int, db: Session = Depends(get_db)):
+def delete_material(
+    material_id: int,
+    db: Session = Depends(get_db),
+    usuario_actual: Usuario = Depends(auth_service.obtener_usuario_actual),
+):
     if not material_service.eliminar_material(db, material_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Material no encontrado")
     return None
 
 
 @router.post("/{material_id}/restaurar", response_model=MaterialResponse)
-def restaurar_material(material_id: int, db: Session = Depends(get_db)):
+def restaurar_material(
+    material_id: int,
+    db: Session = Depends(get_db),
+    usuario_actual: Usuario = Depends(auth_service.obtener_usuario_actual),
+):
     material = material_service.restaurar_material(db, material_id)
     if not material:
         raise HTTPException(

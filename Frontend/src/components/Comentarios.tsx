@@ -17,6 +17,10 @@ interface ComentariosProps {
 
 const API_URL = 'http://localhost:8000';
 
+const authHeaders = () => ({
+  headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
+});
+
 const Comentarios: React.FC<ComentariosProps> = ({ tareaId, tareaNombre, onCerrar }) => {
   const [listaComentarios, setListaComentarios] = useState<Comentario[]>([]);
   const [cargando, setCargando] = useState<boolean>(false);
@@ -63,7 +67,8 @@ const Comentarios: React.FC<ComentariosProps> = ({ tareaId, tareaNombre, onCerra
         {
           contenido: contenido.trim(),
           tarea_id: tareaId,
-        }
+        },
+        authHeaders()
       );
 
       setListaComentarios((prev) => [...prev, respuesta.data]);
@@ -86,7 +91,7 @@ const Comentarios: React.FC<ComentariosProps> = ({ tareaId, tareaNombre, onCerra
 
     try {
       // Endpoint según tarea_router.py: DELETE /tareas/comentarios/{comentario_id}
-      await axios.delete(`${API_URL}/tareas/comentarios/${idComentario}`);
+      await axios.delete(`${API_URL}/tareas/comentarios/${idComentario}`, authHeaders());
       setListaComentarios((prev) => prev.filter((c) => c.id !== idComentario));
     } catch (error) {
       console.error('Error al eliminar el comentario:', error);

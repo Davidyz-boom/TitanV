@@ -4,8 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.models import Usuario
 from app.schemas import ComentarioCreate, ComentarioResponse, TareaCreate, TareaResponse, TareaUpdate
-from app.services import tarea_service
+from app.services import auth_service, tarea_service
 
 router = APIRouter(prefix="/tareas", tags=["Tareas"])
 
@@ -30,7 +31,11 @@ def get_tarea(tarea_id: int, incluir_eliminados: bool = False, db: Session = Dep
 
 
 @router.post("/", response_model=TareaResponse, status_code=status.HTTP_201_CREATED)
-def create_tarea(tarea: TareaCreate, db: Session = Depends(get_db)):
+def create_tarea(
+    tarea: TareaCreate,
+    db: Session = Depends(get_db),
+    usuario_actual: Usuario = Depends(auth_service.obtener_usuario_actual),
+):
     try:
         return tarea_service.crear_tarea(db, tarea)
     except HTTPException:
@@ -43,7 +48,12 @@ def create_tarea(tarea: TareaCreate, db: Session = Depends(get_db)):
 
 
 @router.put("/{tarea_id}", response_model=TareaResponse)
-def update_tarea(tarea_id: int, tarea_actualizada: TareaUpdate, db: Session = Depends(get_db)):
+def update_tarea(
+    tarea_id: int,
+    tarea_actualizada: TareaUpdate,
+    db: Session = Depends(get_db),
+    usuario_actual: Usuario = Depends(auth_service.obtener_usuario_actual),
+):
     tarea = tarea_service.actualizar_tarea(db, tarea_id, tarea_actualizada)
     if not tarea:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tarea no encontrada")
@@ -51,14 +61,22 @@ def update_tarea(tarea_id: int, tarea_actualizada: TareaUpdate, db: Session = De
 
 
 @router.delete("/{tarea_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_tarea(tarea_id: int, db: Session = Depends(get_db)):
+def delete_tarea(
+    tarea_id: int,
+    db: Session = Depends(get_db),
+    usuario_actual: Usuario = Depends(auth_service.obtener_usuario_actual),
+):
     if not tarea_service.eliminar_tarea(db, tarea_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tarea no encontrada")
     return None
 
 
 @router.post("/{tarea_id}/restaurar", response_model=TareaResponse)
-def restaurar_tarea(tarea_id: int, db: Session = Depends(get_db)):
+def restaurar_tarea(
+    tarea_id: int,
+    db: Session = Depends(get_db),
+    usuario_actual: Usuario = Depends(auth_service.obtener_usuario_actual),
+):
     tarea = tarea_service.restaurar_tarea(db, tarea_id)
     if not tarea:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tarea no encontrada o no está eliminada")
@@ -84,6 +102,7 @@ def create_comentario(
     comentario: ComentarioCreate,
     usuario_id: int = Query(..., description="ID del usuario que publica el comentario"),
     db: Session = Depends(get_db),
+    usuario_actual: Usuario = Depends(auth_service.obtener_usuario_actual),
 ):
     if not tarea_service.obtener_tarea(db, tarea_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tarea no encontrada")
@@ -91,7 +110,11 @@ def create_comentario(
 
 
 @router.delete("/comentarios/{comentario_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_comentario(comentario_id: int, db: Session = Depends(get_db)):
+def delete_comentario(
+    comentario_id: int,
+    db: Session = Depends(get_db),
+    usuario_actual: Usuario = Depends(auth_service.obtener_usuario_actual),
+):
     if not tarea_service.eliminar_comentario(db, comentario_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Comentario no encontrado")
     return None

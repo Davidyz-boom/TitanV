@@ -5,7 +5,7 @@ interno viene cada clase.
 """
 
 from app.models.usuario_model import RolUsuario, Usuario
-from app.models.proyecto_model import EstadoProyecto, ProyectoObra, Subcontratista
+from app.models.proyecto_model import EstadoProyecto, ProyectoObra
 from app.models.colaborador_model import ProyectoColaborador, ProyectoColaborador as ColaboradorProyecto, RolProyecto, RolProyecto as RolColaborador
 from app.models.material_model import HistorialMovimiento, InventarioObra, Material, TipoMovimiento
 from app.models.tarea_model import Comentario, EstadoTarea, Tarea
@@ -17,7 +17,6 @@ __all__ = [
     "RolUsuario",
     "ProyectoObra",
     "EstadoProyecto",
-    "Subcontratista",
     "ProyectoColaborador",
     "ColaboradorProyecto",
     "RolProyecto",

@@ -4,6 +4,8 @@ import Registro from './Registro';
 // IMPORTACIÓN CORRECTA DEL VIDEO DESDE TU CARPETA ASSETS
 import videoLogin from '../assets/video_login.mp4'; 
 
+import logoTitan from '../assets/logo.png';
+
 export interface LoginProps {
   correo: string;
   contrasena: string;
@@ -11,6 +13,7 @@ export interface LoginProps {
   onContrasenaChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onEnviar: (e: React.FormEvent) => void;
   onGoogleLogin?: () => void;
+  onVolver?: () => void;
 }
 
 export const Login: React.FC<LoginProps> = ({
@@ -20,6 +23,7 @@ export const Login: React.FC<LoginProps> = ({
   onContrasenaChange,
   onEnviar,
   onGoogleLogin,
+  onVolver,
 }) => {
 
   const [mostrarRegistro, setMostrarRegistro] = useState(false);
@@ -103,14 +107,63 @@ export const Login: React.FC<LoginProps> = ({
         zIndex: 3
       }}>
 
-        <h2 style={{
-          color: '#fff',
-          margin: '0 0 5px 0',
-          fontSize: '26px',
-          letterSpacing: '1px'
-        }}>
-          TITAN <span style={{ color: '#ffcc00' }}>V</span>
-        </h2>
+        {onVolver && (
+          <button
+            type="button"
+            onClick={onVolver}
+            title="Volver al panel principal"
+            style={{
+              position: 'absolute',
+              top: '16px',
+              left: '16px',
+              background: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 214, 10, 0.5)',
+              borderRadius: '50%',
+              width: '34px',
+              height: '34px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#ffd60a',
+              cursor: 'pointer',
+              fontSize: '15px',
+              transition: 'all 0.2s ease',
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.background = '#ffd60a';
+              e.currentTarget.style.color = '#000';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+              e.currentTarget.style.color = '#ffd60a';
+            }}
+          >
+            <i className="fas fa-arrow-left"></i>
+          </button>
+        )}
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '8px' }}>
+          <img
+            src={logoTitan}
+            alt="Titan V"
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '50%',
+              objectFit: 'cover',
+              border: '2px solid #ffd60a',
+              boxShadow: '0 0 8px rgba(255, 214, 10, 0.4)',
+            }}
+          />
+          <h2 style={{
+            color: '#fff',
+            margin: 0,
+            fontSize: '26px',
+            letterSpacing: '1px'
+          }}>
+            TITAN <span style={{ color: '#ffcc00' }}>V</span>
+          </h2>
+        </div>
 
         <p style={{
           color: '#aaa',

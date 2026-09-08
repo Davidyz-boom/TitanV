@@ -1,3 +1,5 @@
+import logoTitan from '../assets/logo.png';
+
 interface SidebarProps {
   activeTab: string;
   onSelectTab: (tab: string) => void;
@@ -29,8 +31,20 @@ export const Sidebar = ({ activeTab, onSelectTab, onLogout, bloqueado = false }:
 
   return (
     <div className="sidebar">
-      <div className="logo">
-        TITAN <span>V</span>
+      <div className="logo" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+        <img
+          src={logoTitan}
+          alt="Titan V"
+          style={{
+            width: '38px',
+            height: '38px',
+            borderRadius: '50%',
+            objectFit: 'cover',
+            border: '2px solid #ffd60a',
+            boxShadow: '0 0 8px rgba(255, 214, 10, 0.4)',
+          }}
+        />
+        <span>TITAN <span style={{ color: '#ffd60a' }}>V</span></span>
       </div>
       <div className="sidebar-menu">
         <a style={{ cursor: 'pointer' }} className={claseItem('inicio')} onClick={() => manejarClick('inicio')}>
@@ -50,6 +64,12 @@ export const Sidebar = ({ activeTab, onSelectTab, onLogout, bloqueado = false }:
         </a>
         <a style={{ cursor: 'pointer' }} className={claseItem('tareas')} onClick={() => manejarClick('tareas')}>
           Gestión de Tareas {icono('tareas')}
+        </a>
+        <a style={{ cursor: 'pointer' }} className={claseItem('turnos')} onClick={() => manejarClick('turnos')}>
+          Turnos y Asistencia {icono('turnos')}
+        </a>
+        <a style={{ cursor: 'pointer' }} className={claseItem('evidencias')} onClick={() => manejarClick('evidencias')}>
+          Evidencias {icono('evidencias')}
         </a>
 
         <a onClick={onLogout} style={{ marginTop: '20px', color: '#ff4757', cursor: 'pointer' }}>

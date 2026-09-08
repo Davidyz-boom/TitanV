@@ -14,6 +14,10 @@ export interface Tarea {
 
 const API_URL = 'http://localhost:8000';
 
+const authHeaders = () => ({
+  headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
+});
+
 interface Proyecto {
   id: number;
   nombre_proyecto: string;
@@ -102,7 +106,7 @@ const TareasTab: React.FC = () => {
         usuario_id: Number(usuarioId) || 1,
       };
 
-      const respuesta = await axios.post<Tarea>(`${API_URL}/tareas/`, payload);
+      const respuesta = await axios.post<Tarea>(`${API_URL}/tareas/`, payload, authHeaders());
       setTareas((prev) => [respuesta.data, ...prev]);
 
       // Limpiar formulario
@@ -120,9 +124,11 @@ const TareasTab: React.FC = () => {
 
   const cambiarEstado = async (idTarea: number, nuevoEstado: string) => {
     try {
-      const respuesta = await axios.put<Tarea>(`${API_URL}/tareas/${idTarea}`, {
-        estado: nuevoEstado,
-      });
+      const respuesta = await axios.put<Tarea>(
+        `${API_URL}/tareas/${idTarea}`,
+        { estado: nuevoEstado },
+        authHeaders()
+      );
 
       setTareas((prev) =>
         prev.map((t) => (t.id === idTarea ? { ...t, estado: respuesta.data.estado } : t))
@@ -145,7 +151,7 @@ const TareasTab: React.FC = () => {
     }
 
     try {
-      await axios.delete(`${API_URL}/tareas/${idTarea}`);
+      await axios.delete(`${API_URL}/tareas/${idTarea}`, authHeaders());
       setTareas((prev) => prev.filter((t) => t.id !== idTarea));
 
       if (tareaSeleccionada?.id === idTarea) {

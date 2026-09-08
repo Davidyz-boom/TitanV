@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import QuienesSomos from '../components/QuienesSomos';
 // IMPORTACIÓN CON EL NOMBRE DE TU VIDEO
 import videoFondo from '../assets/video_landing.mp4'; 
+import logoTitan from '../assets/logo.png';
 
 const caracteristicas = [
   {
@@ -42,8 +43,20 @@ const LandingPage = () => {
           zIndex: 10,
         }}
       >
-        <div style={{ fontSize: '22px', fontWeight: 800 }}>
-          TITAN <span style={{ color: '#ffd60a' }}>V</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '22px', fontWeight: 800 }}>
+          <img
+            src={logoTitan}
+            alt="Titan V"
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '50%',
+              objectFit: 'cover',
+              border: '2px solid #ffd60a',
+              boxShadow: '0 0 8px rgba(255, 214, 10, 0.4)',
+            }}
+          />
+          <span>TITAN <span style={{ color: '#ffd60a' }}>V</span></span>
         </div>
         <button
           onClick={() => navigate('/login')}

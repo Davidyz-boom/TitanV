@@ -36,22 +36,4 @@ class ProyectoObra(Base):
     )
     evidencias = relationship("EvidenciaMultimedia", back_populates="proyecto", cascade="all, delete-orphan")
     actas_campo = relationship("ActaCampo", back_populates="proyecto", cascade="all, delete-orphan")
-    subcontratistas = relationship("Subcontratista", back_populates="proyecto", cascade="all, delete-orphan")
     colaboradores = relationship("ProyectoColaborador", back_populates="proyecto", cascade="all, delete-orphan")
-
-
-class Subcontratista(Base):
-    """No existía como modelo, aunque schemas.py ya tenía SubcontratistaBase/Create/Response."""
-
-    __tablename__ = "subcontratistas"
-
-    id = Column(Integer, primary_key=True, index=True)
-    proyecto_id = Column(Integer, ForeignKey("proyectos_obra.id", ondelete="CASCADE"), nullable=False)
-    nombre_empresa = Column(String(150), nullable=False)
-    nit = Column(String(50), nullable=False)
-    fecha_vencimiento_poliza = Column(Date, nullable=False)
-    fecha_vencimiento_ss = Column(Date, nullable=False)
-    estado = Column(String(50), nullable=False, default="Autorizado")
-    fecha_eliminacion = Column(DateTime, nullable=True, default=None)
-
-    proyecto = relationship("ProyectoObra", back_populates="subcontratistas")

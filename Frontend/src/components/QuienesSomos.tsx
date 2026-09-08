@@ -1,86 +1,160 @@
-const contenido = [
+import React from 'react';
+
+interface ElementoLista {
+  destacado: string;
+  texto: string;
+}
+
+interface TarjetaSeccion {
+  icono: string;
+  titulo: string;
+  elementos: ElementoLista[];
+}
+
+const contenido: TarjetaSeccion[] = [
   {
-    titulo: 'Misión',
-    texto:
-      'Transformar la gestión operativa de las empresas constructoras mediante una plataforma digital centralizada, que facilite el registro en tiempo real de información logística y técnica, optimizando la comunicación y la eficiencia en la ejecución de proyectos de infraestructura.',
+    icono: '🎯',
+    titulo: 'Objetivos Estratégicos',
+    elementos: [
+      {
+        destacado: 'Liderar la transformación digital',
+        texto: 'en la construcción Latinoamericana.',
+      },
+      {
+        destacado: 'Optimizar la eficiencia operativa',
+        texto: 'con soluciones en tiempo real.',
+      },
+      {
+        destacado: 'Fomentar la transparencia total',
+        texto: 'en la gestión de obras y logística.',
+      },
+    ],
   },
   {
-    titulo: 'Visión',
-    texto:
-      'Convertirnos en la solución tecnológica líder para las pequeñas y medianas empresas de construcción en Latinoamérica, siendo el estándar de referencia en la organización, flexibilidad y transparencia en el seguimiento de obras.',
+    icono: '⚙️',
+    titulo: 'Forma de Trabajo',
+    elementos: [
+      {
+        destacado: 'Innovación Ágil:',
+        texto: 'Soluciones dinámicas para desafíos de campo.',
+      },
+      {
+        destacado: 'Centralización y Datos:',
+        texto: 'Registro inteligente y centralizado de información técnica y logística.',
+      },
+      {
+        destacado: 'Colaboración en Tiempo Real:',
+        texto: 'Conectando equipos de manera fluida.',
+      },
+    ],
   },
   {
-    titulo: 'Valores',
-    texto: null,
-    lista: [
-      'Eficiencia: Simplificamos procesos complejos para obtener resultados rápidos y precisos.',
-      'Transparencia: Mantenemos informadas a todas las partes interesadas mediante un registro constante y abierto.',
-      'Innovación: Utilizamos tecnología digital para modernizar la documentación técnica y operativa en campo.',
-      'Colaboración: Fomentamos el trabajo en equipo a través de herramientas de comunicación y contenido compartido.',
+    icono: '⭐',
+    titulo: 'Diferencia de la Competencia',
+    elementos: [
+      {
+        destacado: 'Nuestra Plataforma Integral:',
+        texto: 'Integración única de funciones de gestión operativa, logística y de personal en un solo lugar.',
+      },
+      {
+        destacado: 'Enfoque Pyme:',
+        texto: 'Diseño optimizado para las necesidades específicas de pequeñas y medianas constructoras.',
+      },
+      {
+        destacado: 'Flexibilidad y Adaptabilidad:',
+        texto: 'Una plataforma que evoluciona con el proyecto.',
+      },
     ],
   },
 ];
 
-const QuienesSomos = () => {
+const QuienesSomos: React.FC = () => {
   return (
     <section
       id="quienes-somos"
-      style={{ backgroundColor: '#0a0a0a', color: '#fff', padding: '70px 8%' }}
+      style={{
+        backgroundColor: '#0d0d0d',
+        color: '#ffffff',
+        padding: '80px 8%',
+        fontFamily: "'Inter', sans-serif",
+      }}
     >
       <h2
         style={{
-          fontSize: '26px',
-          borderLeft: '5px solid #ffd60a',
+          fontSize: '28px',
+          fontWeight: 700,
+          borderLeft: '4px solid #ffd60a',
           paddingLeft: '16px',
-          marginBottom: '40px',
+          marginBottom: '48px',
+          letterSpacing: '-0.5px',
         }}
       >
-        Quiénes Somos
+        Objetivos y Estrategia
       </h2>
 
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-          gap: '24px',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gap: '28px',
         }}
       >
-        {contenido.map((item) => (
+        {contenido.map((card) => (
           <div
-            key={item.titulo}
+            key={card.titulo}
             style={{
-              backgroundColor: '#1e1e1e',
-              border: '1px solid #333',
-              borderRadius: '14px',
-              padding: '30px 26px',
+              backgroundColor: '#161616',
+              border: '1px solid rgba(255, 214, 10, 0.15)',
+              borderRadius: '16px',
+              padding: '36px 30px',
+              boxShadow: '0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 214, 10, 0.03)',
+              transition: 'transform 0.2s ease, border-color 0.2s ease',
+              display: 'flex',
+              flexDirection: 'column',
             }}
           >
-            <h3
+            <div
               style={{
-                color: '#ffd60a',
-                fontSize: '18px',
-                textTransform: 'uppercase',
-                marginBottom: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                marginBottom: '24px',
               }}
             >
-              {item.titulo}
-            </h3>
+              <span style={{ fontSize: '22px' }}>{card.icono}</span>
+              <h3
+                style={{
+                  color: '#ffd60a',
+                  fontSize: '20px',
+                  fontWeight: 700,
+                  margin: 0,
+                }}
+              >
+                {card.titulo}
+              </h3>
+            </div>
 
-            {item.texto && (
-              <p style={{ color: '#b0b0b0', lineHeight: 1.7, fontSize: '14px', fontWeight: 300 }}>
-                {item.texto}
-              </p>
-            )}
-
-            {item.lista && (
-              <ul style={{ margin: 0, paddingLeft: '18px', color: '#b0b0b0', fontSize: '14px', lineHeight: 1.7 }}>
-                {item.lista.map((valor) => (
-                  <li key={valor} style={{ marginBottom: '8px' }}>
-                    {valor}
-                  </li>
-                ))}
-              </ul>
-            )}
+            <ul
+              style={{
+                margin: 0,
+                paddingLeft: '20px',
+                color: '#cccccc',
+                fontSize: '14.5px',
+                lineHeight: '1.6',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '16px',
+              }}
+            >
+              {card.elementos.map((item, index) => (
+                <li key={index} style={{ paddingLeft: '4px' }}>
+                  <strong style={{ color: '#ffffff', fontWeight: 600 }}>
+                    {item.destacado}{' '}
+                  </strong>
+                  <span>{item.texto}</span>
+                </li>
+              ))}
+            </ul>
           </div>
         ))}
       </div>

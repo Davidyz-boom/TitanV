@@ -10,6 +10,8 @@ const ACCESOS = [
   { tab: 'materiales', icono: 'fa-boxes-stacked', titulo: 'Inventario de Insumos', texto: 'Controla entradas y stock de material.' },
   { tab: 'usuarios', icono: 'fa-users', titulo: 'Gestión de Usuarios', texto: 'Administra el equipo de trabajo.' },
   { tab: 'productos', icono: 'fa-list', titulo: 'Catálogo / Productos', texto: 'Consulta el catálogo general.' },
+  { tab: 'turnos', icono: 'fa-clock', titulo: 'Turnos y Asistencia', texto: 'Programa turnos y registra la asistencia del equipo.' },
+  { tab: 'evidencias', icono: 'fa-camera', titulo: 'Evidencias de Obra', texto: 'Sube fotos y documentos del avance del proyecto.' },
 ];
 
 export const InicioTab = ({ onIrA, tieneProyectos, cargando }: InicioTabProps) => {

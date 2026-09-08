@@ -22,7 +22,9 @@ const Usuarios: React.FC = () => {
   const cargarUsuarios = async () => {
     try {
       setCargando(true);
-      const respuesta = await axios.get<Usuario[]>(`${API_URL}/usuarios/`);
+      const respuesta = await axios.get<Usuario[]>(`${API_URL}/usuarios/`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
+      });
       setUsuarios(respuesta.data);
     } catch (error) {
       console.error('Error al cargar usuarios:', error);

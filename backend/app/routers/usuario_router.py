@@ -26,6 +26,7 @@ def _exigir_admin(current_user: Usuario):
 def get_usuarios(
     skip: int = 0,
     limit: int = 100,
+    current_user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     return usuario_service.listar_usuarios(db, skip, limit)
@@ -90,7 +91,12 @@ def delete_usuario(
 
 
 @router.post("/{usuario_id}/restaurar", response_model=UsuarioResponse)
-def restaurar_usuario(usuario_id: int, db: Session = Depends(get_db)):
+def restaurar_usuario(
+    usuario_id: int,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    _exigir_admin(current_user)
     usuario = usuario_service.restaurar_usuario(db, usuario_id)
     if not usuario:
         raise HTTPException(

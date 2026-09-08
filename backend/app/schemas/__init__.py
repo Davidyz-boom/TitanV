@@ -23,10 +23,6 @@ from app.schemas.proyecto_schema import (
     ProyectoCreate,
     ProyectoResponse,
     ProyectoUpdate,
-    SubcontratistaBase,
-    SubcontratistaCreate,
-    SubcontratistaResponse,
-    SubcontratistaUpdate,
 )
 from app.schemas.material_schema import (
     InventarioResponse,
@@ -51,15 +47,16 @@ from app.schemas.asistencia_schema import (
     TurnoResponse,
     TurnoUpdate,
 )
+from app.schemas.reporte_schema import EvidenciaResponse
 
 __all__ = [
     "UsuarioBase", "UsuarioCreate", "UsuarioUpdate", "UsuarioResponse", "UsuarioLogin", "TokenResponse", "GoogleAuthRequest",
     "ColaboradorCreate", "ColaboradorInvitar", "ColaboradorUpdate", "ColaboradorResponse",
     "ProyectoBase", "ProyectoCreate", "ProyectoUpdate", "ProyectoResponse",
-    "SubcontratistaBase", "SubcontratistaCreate", "SubcontratistaResponse", "SubcontratistaUpdate",
     "MaterialBase", "MaterialCreate", "MaterialUpdate", "MaterialResponse",
     "RegistroMovimiento", "KardexResponse", "InventarioResponse",
     "ComentarioCreate", "ComentarioResponse",
     "TareaBase", "TareaCreate", "TareaUpdate", "TareaResponse",
     "TurnoBase", "TurnoCreate", "TurnoUpdate", "TurnoResponse",
+    "EvidenciaResponse",
 ]
