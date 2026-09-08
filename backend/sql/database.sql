@@ -211,3 +211,50 @@ CREATE TRIGGER trigger_validar_stock
     BEFORE INSERT ON historial_movimientos
     FOR EACH ROW
     EXECUTE FUNCTION validar_stock_antes_de_movimiento();
+
+-- =========================================================
+-- Trigger: actualización automática del stock
+-- =========================================================
+
+CREATE OR REPLACE FUNCTION actualizar_stock_por_movimiento()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.tipo_movimiento = 'Entrada' THEN
+
+        INSERT INTO inventario_obras (
+            proyecto_id,
+            material_id,
+            cantidad_disponible
+        )
+        VALUES (
+            NEW.proyecto_id,
+            NEW.material_id,
+            NEW.cantidad
+        )
+        ON CONFLICT (proyecto_id, material_id)
+        DO UPDATE SET
+            cantidad_disponible =
+                inventario_obras.cantidad_disponible
+                + EXCLUDED.cantidad_disponible;
+
+    ELSIF NEW.tipo_movimiento = 'Salida' THEN
+
+        UPDATE inventario_obras
+        SET cantidad_disponible =
+            cantidad_disponible - NEW.cantidad
+        WHERE proyecto_id = NEW.proyecto_id
+          AND material_id = NEW.material_id;
+
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trigger_actualizar_stock
+ON historial_movimientos;
+
+CREATE TRIGGER trigger_actualizar_stock
+    AFTER INSERT ON historial_movimientos
+    FOR EACH ROW
+    EXECUTE FUNCTION actualizar_stock_por_movimiento();
