@@ -85,8 +85,22 @@ const Registro: React.FC<RegistroProps> = ({ onRegistrar, onVolver }) => {
     <div style={estilos.contenedor}>
       <div style={estilos.formulario}>
         {/* LOGO DE TITAN V + TÍTULO */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '8px' }}>
-          <img src={logoImg} alt="Titan V Logo" style={{ height: '42px', width: 'auto', objectFit: 'contain' }} />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '14px', marginBottom: '12px' }}>
+          <div style={{
+            width: '48px',
+            height: '48px',
+            borderRadius: '50%',
+            backgroundColor: '#141414',
+            border: '2px solid #ffcc00',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+            boxShadow: '0 0 12px rgba(255, 204, 0, 0.35)',
+            flexShrink: 0,
+          }}>
+            <img src={logoImg} alt="Titan V Logo" style={{ width: '82%', height: '82%', objectFit: 'contain' }} />
+          </div>
           <h1 style={{ ...estilos.titulo, margin: 0 }}>
             TITAN <span style={estilos.acento}>V</span>
           </h1>

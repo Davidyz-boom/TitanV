@@ -33,9 +33,23 @@ export const InicioTab = ({ onIrA, tieneProyectos, cargando }: InicioTabProps) =
     return (
       <div className="tab-content active animated-fadeIn">
         <div className="section-header">
-          <h2>
-            <img src={logoImg} alt="Titan V" style={{ height: '32px', width: 'auto', verticalAlign: 'middle', marginRight: '10px' }} />
-            Bienvenido a Titan V
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '38px',
+              height: '38px',
+              borderRadius: '50%',
+              backgroundColor: '#141414',
+              border: '2px solid #ffd60a',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              overflow: 'hidden',
+              boxShadow: '0 0 10px rgba(255, 214, 10, 0.3)',
+              flexShrink: 0
+            }}>
+              <img src={logoImg} alt="Titan V" style={{ width: '80%', height: '80%', objectFit: 'contain' }} />
+            </div>
+            <span>Bienvenido a Titan V</span>
           </h2>
         </div>
         <p style={{ color: '#666' }}>Cargando información del sistema...</p>
@@ -54,7 +68,21 @@ export const InicioTab = ({ onIrA, tieneProyectos, cargando }: InicioTabProps) =
         <div className="panel-hero-overlay"></div>
         <div className="panel-hero-content">
           <div className="panel-hero-badge">
-            <img src={logoImg} alt="Titan V" style={{ height: '18px', width: 'auto', objectFit: 'contain' }} />
+            <div style={{
+              width: '22px',
+              height: '22px',
+              borderRadius: '50%',
+              backgroundColor: '#141414',
+              border: '1.5px solid #ffd60a',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              overflow: 'hidden',
+              marginRight: '6px',
+              flexShrink: 0
+            }}>
+              <img src={logoImg} alt="Titan V" style={{ width: '80%', height: '80%', objectFit: 'contain' }} />
+            </div>
             <span>PLATAFORMA DE CONTROL CONSTRUCTIVO TITAN V</span>
           </div>
           <h1 className="panel-hero-title">

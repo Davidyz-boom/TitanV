@@ -57,11 +57,24 @@ body {
     margin-bottom: 12px;
 }
 
+.sidebar-logo-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #141414;
+    border: 2px solid #ffd60a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-shadow: 0 0 12px rgba(255, 214, 10, 0.35);
+    flex-shrink: 0;
+}
+
 .sidebar-logo-img {
-    height: 42px;
-    width: auto;
+    height: 80%;
+    width: 80%;
     object-fit: contain;
-    filter: drop-shadow(0 2px 8px rgba(255, 214, 10, 0.3));
 }
 
 .logo-title {

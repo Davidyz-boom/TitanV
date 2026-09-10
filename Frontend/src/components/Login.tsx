@@ -134,8 +134,22 @@ export const Login: React.FC<LoginProps> = ({
           </button>
         )}
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginTop: '10px' }}>
-          <img src={logoImg} alt="Titan V Logo" style={{ height: '36px', width: 'auto', objectFit: 'contain' }} />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginTop: '10px' }}>
+          <div style={{
+            width: '46px',
+            height: '46px',
+            borderRadius: '50%',
+            backgroundColor: '#141414',
+            border: '2px solid #ffcc00',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+            boxShadow: '0 0 12px rgba(255, 204, 0, 0.35)',
+            flexShrink: 0,
+          }}>
+            <img src={logoImg} alt="Titan V Logo" style={{ width: '82%', height: '82%', objectFit: 'contain' }} />
+          </div>
           <h2 style={{
             color: '#fff',
             margin: 0,

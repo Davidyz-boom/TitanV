@@ -41,7 +41,9 @@ export const Sidebar = ({ activeTab, onSelectTab, onLogout, bloqueado = false }:
       {/* CABECERA: LOGO + TITAN V */}
       <div className="sidebar-header">
         <div className="sidebar-brand">
-          <img src={logoImg} alt="Titan V Logo" className="sidebar-logo-img" />
+          <div className="sidebar-logo-circle">
+            <img src={logoImg} alt="Titan V Logo" className="sidebar-logo-img" />
+          </div>
           <div className="logo-title">
             TITAN <span>V</span>
           </div>

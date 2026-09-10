@@ -43,7 +43,21 @@ const LandingPage = () => {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '24px', fontWeight: 900 }}>
-          <img src={logoImg} alt="Titan V Logo" style={{ height: '42px', width: 'auto', objectFit: 'contain' }} />
+          <div style={{
+            width: '46px',
+            height: '46px',
+            borderRadius: '50%',
+            backgroundColor: '#141414',
+            border: '2px solid #ffd60a',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+            boxShadow: '0 0 12px rgba(255, 214, 10, 0.35)',
+            flexShrink: 0,
+          }}>
+            <img src={logoImg} alt="Titan V Logo" style={{ width: '82%', height: '82%', objectFit: 'contain' }} />
+          </div>
           <span>TITAN <span style={{ color: '#ffd60a' }}>V</span></span>
         </div>
         <button
