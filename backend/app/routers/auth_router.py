@@ -14,6 +14,18 @@ router = APIRouter(prefix="/auth", tags=["Autenticación"])
 @router.post("/registro", response_model=UsuarioResponse, status_code=status.HTTP_201_CREATED)
 def registro(usuario: UsuarioCreate, db: Session = Depends(get_db)):
     """Registro público de nuevo usuario en la base de datos."""
+    import re
+
+    if (
+        not re.search(r"[a-zA-Z]", usuario.contrasena)
+        or not re.search(r"[0-9]", usuario.contrasena)
+        or not re.search(r"[^a-zA-Z0-9]", usuario.contrasena)
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="La contraseña debe contener al menos 8 caracteres, incluyendo letras, números y al menos un símbolo especial (ej: *, #, @, $, !).",
+        )
+
     if usuario_service.correo_registrado(db, usuario.correo_electronico):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

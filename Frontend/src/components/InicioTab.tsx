@@ -1,4 +1,5 @@
 import videoHero from '../assets/video_landing.mp4';
+import logoImg from '../assets/logo.png';
 
 interface InicioTabProps {
   onIrA: (tab: string) => void;
@@ -32,7 +33,10 @@ export const InicioTab = ({ onIrA, tieneProyectos, cargando }: InicioTabProps) =
     return (
       <div className="tab-content active animated-fadeIn">
         <div className="section-header">
-          <h2><i className="fas fa-house"></i> Bienvenido a Titan V</h2>
+          <h2>
+            <img src={logoImg} alt="Titan V" style={{ height: '32px', width: 'auto', verticalAlign: 'middle', marginRight: '10px' }} />
+            Bienvenido a Titan V
+          </h2>
         </div>
         <p style={{ color: '#666' }}>Cargando información del sistema...</p>
       </div>
@@ -50,7 +54,8 @@ export const InicioTab = ({ onIrA, tieneProyectos, cargando }: InicioTabProps) =
         <div className="panel-hero-overlay"></div>
         <div className="panel-hero-content">
           <div className="panel-hero-badge">
-            <i className="fas fa-hard-hat"></i> PLATAFORMA DE CONTROL CONSTRUCTIVO
+            <img src={logoImg} alt="Titan V" style={{ height: '18px', width: 'auto', objectFit: 'contain' }} />
+            <span>PLATAFORMA DE CONTROL CONSTRUCTIVO TITAN V</span>
           </div>
           <h1 className="panel-hero-title">
             ¡Hola, <span className="highlight">{nombreUsuario}</span>!
