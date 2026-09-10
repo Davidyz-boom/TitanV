@@ -26,13 +26,13 @@ class ComentarioResponse(BaseModel):
 
 class TareaBase(BaseModel):
     nombre_tarea: str = Field(..., max_length=150)
-    descripcion: str
+    descripcion: Optional[str] = ""
     estado: EstadoTarea = EstadoTarea.PENDIENTE
 
 
 class TareaCreate(TareaBase):
-    proyecto_id: int
-    usuario_id: int  # ID del operario asignado
+    proyecto_id: int = 1
+    usuario_id: Optional[int] = 1  # ID del operario asignado (opcional si aún no hay usuarios)
 
 
 class TareaUpdate(BaseModel):
@@ -44,10 +44,11 @@ class TareaUpdate(BaseModel):
 
 class TareaResponse(TareaBase):
     id: int
-    fecha_asignacion: date
+    fecha_asignacion: Optional[date] = None
     proyecto_id: int
-    usuario_id: int
+    usuario_id: Optional[int] = None
     comentarios: List[ComentarioResponse] = []
 
     class Config:
         from_attributes = True
+

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Date, ForeignKey, Integer, String, Time
+from sqlalchemy import Column, Date, DateTime, ForeignKey, Integer, String, Time
 from sqlalchemy.orm import relationship
 
 from app.core.database import Base
@@ -14,6 +14,7 @@ class TurnoRelevo(Base):
     hora_inicio = Column(Time, nullable=False)
     hora_fin = Column(Time, nullable=False)
     estado_asistencia = Column(String(50), nullable=False)
+    fecha_eliminacion = Column(DateTime, nullable=True, default=None)
 
     proyecto = relationship("ProyectoObra", back_populates="turnos_relevos")
     usuario = relationship("Usuario", back_populates="turnos_relevos")

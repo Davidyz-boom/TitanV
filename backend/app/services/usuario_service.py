@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.models import Usuario
 from app.schemas import UsuarioCreate, UsuarioUpdate
+from app.services import auth_service
 
 
 def adaptar_usuario_a_schema(usuario_db: Usuario) -> Usuario:
@@ -37,7 +38,7 @@ def crear_usuario(db: Session, usuario: UsuarioCreate) -> Usuario:
         apellidos=apellidos_db,
         correo_electronico=usuario.correo_electronico,
         rol=usuario.rol.value if hasattr(usuario.rol, "value") else usuario.rol,
-        contrasena_encriptada=usuario.contrasena,  # TAREA FUTURA: aplicar hash (ej. bcrypt) aquí
+        contrasena_encriptada=auth_service.hashear_contrasena(usuario.contrasena),
         fecha_vencimiento_licencia=usuario.fecha_vencimiento_licencia,
         tiene_certificacion_maquinaria=usuario.tiene_certificacion_maquinaria,
     )
@@ -76,10 +77,27 @@ def actualizar_usuario(db: Session, usuario_id: int, datos: UsuarioUpdate) -> Op
 
 
 def eliminar_usuario(db: Session, usuario_id: int) -> bool:
-    usuario_query = db.query(Usuario).filter(Usuario.id_usuario == usuario_id)
-    if not usuario_query.first():
+    """No borra al usuario de verdad: lo desactiva (activo=False).
+
+    Antes esto hacía un DELETE real, lo que además arrastraba en cascada sus
+    tareas, comentarios, turnos e historial de movimientos (por las FK con
+    ondelete=CASCADE) — se perdía todo ese historial sin poder recuperarlo.
+    """
+    usuario = db.query(Usuario).filter(Usuario.id_usuario == usuario_id).first()
+    if not usuario:
         return False
 
-    usuario_query.delete(synchronize_session=False)
+    usuario.activo = False
     db.commit()
     return True
+
+
+def restaurar_usuario(db: Session, usuario_id: int) -> Optional[Usuario]:
+    usuario = db.query(Usuario).filter(Usuario.id_usuario == usuario_id).first()
+    if not usuario or usuario.activo:
+        return None
+
+    usuario.activo = True
+    db.commit()
+    db.refresh(usuario)
+    return adaptar_usuario_a_schema(usuario)

@@ -13,16 +13,17 @@ router = APIRouter(prefix="/subcontratistas", tags=["Subcontratistas"])
 @router.get("/", response_model=List[SubcontratistaResponse])
 def get_subcontratistas(
     proyecto_id: Optional[int] = Query(None, description="Filtrar por proyecto"),
+    incluir_eliminados: bool = False,
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
 ):
-    return subcontratista_service.listar_subcontratistas(db, proyecto_id, skip, limit)
+    return subcontratista_service.listar_subcontratistas(db, proyecto_id, incluir_eliminados, skip, limit)
 
 
 @router.get("/{subcontratista_id}", response_model=SubcontratistaResponse)
-def get_subcontratista(subcontratista_id: int, db: Session = Depends(get_db)):
-    subcontratista = subcontratista_service.obtener_subcontratista(db, subcontratista_id)
+def get_subcontratista(subcontratista_id: int, incluir_eliminados: bool = False, db: Session = Depends(get_db)):
+    subcontratista = subcontratista_service.obtener_subcontratista(db, subcontratista_id, incluir_eliminados)
     if not subcontratista:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Subcontratista no encontrado")
     return subcontratista
@@ -46,3 +47,13 @@ def delete_subcontratista(subcontratista_id: int, db: Session = Depends(get_db))
     if not subcontratista_service.eliminar_subcontratista(db, subcontratista_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Subcontratista no encontrado")
     return None
+
+
+@router.post("/{subcontratista_id}/restaurar", response_model=SubcontratistaResponse)
+def restaurar_subcontratista(subcontratista_id: int, db: Session = Depends(get_db)):
+    subcontratista = subcontratista_service.restaurar_subcontratista(db, subcontratista_id)
+    if not subcontratista:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Subcontratista no encontrado o no está eliminado"
+        )
+    return subcontratista

@@ -25,6 +25,7 @@ class Tarea(Base):
     fecha_inicio = Column(Date, nullable=True)
     fecha_fin_estimada = Column(Date, nullable=True)
     fecha_asignacion = Column(Date, server_default=func.current_date())
+    fecha_eliminacion = Column(DateTime, nullable=True, default=None)
 
     proyecto = relationship("ProyectoObra", back_populates="tareas")
     operario = relationship("Usuario", back_populates="tareas")
@@ -39,6 +40,7 @@ class Comentario(Base):
     usuario_id = Column(Integer, ForeignKey("usuarios.id_usuario", ondelete="CASCADE"), nullable=False)
     contenido = Column(Text, nullable=False)
     fecha_comentario = Column(DateTime, server_default=func.now(), nullable=False)
+    fecha_eliminacion = Column(DateTime, nullable=True, default=None)
 
     tarea = relationship("Tarea", back_populates="comentarios")
     usuario = relationship("Usuario", back_populates="comentarios")

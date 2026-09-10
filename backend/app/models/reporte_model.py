@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -10,10 +12,15 @@ class EvidenciaMultimedia(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     proyecto_id = Column(Integer, ForeignKey("proyectos_obra.id", ondelete="CASCADE"), nullable=False)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id_usuario", ondelete="CASCADE"), nullable=False)
+    nombre_archivo = Column(String(255), nullable=False)
     ruta_archivo = Column(String(255), nullable=False)
+    descripcion = Column(String(300), nullable=True)
     fecha_subida = Column(DateTime, server_default=func.now(), nullable=False)
+    fecha_eliminacion = Column(DateTime, nullable=True, default=None)
 
     proyecto = relationship("ProyectoObra", back_populates="evidencias")
+    usuario = relationship("Usuario")
 
 
 class ActaCampo(Base):

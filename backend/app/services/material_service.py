@@ -2,16 +2,23 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
+from app.core.soft_delete import marcar_eliminado, restaurar, sin_eliminados
 from app.models import Material
 from app.schemas import MaterialCreate, MaterialUpdate
 
 
-def listar_materiales(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(Material).offset(skip).limit(limit).all()
+def listar_materiales(db: Session, incluir_eliminados: bool = False, skip: int = 0, limit: int = 100):
+    query = db.query(Material)
+    if not incluir_eliminados:
+        query = sin_eliminados(query, Material)
+    return query.offset(skip).limit(limit).all()
 
 
-def obtener_material(db: Session, material_id: int) -> Optional[Material]:
-    return db.query(Material).filter(Material.id == material_id).first()
+def obtener_material(db: Session, material_id: int, incluir_eliminados: bool = False) -> Optional[Material]:
+    query = db.query(Material).filter(Material.id == material_id)
+    if not incluir_eliminados:
+        query = sin_eliminados(query, Material)
+    return query.first()
 
 
 def crear_material(db: Session, material: MaterialCreate) -> Material:
@@ -23,21 +30,33 @@ def crear_material(db: Session, material: MaterialCreate) -> Material:
 
 
 def actualizar_material(db: Session, material_id: int, datos: MaterialUpdate) -> Optional[Material]:
-    material_query = db.query(Material).filter(Material.id == material_id)
-    material = material_query.first()
+    material = obtener_material(db, material_id)
     if not material:
         return None
 
-    material_query.update(datos.model_dump(exclude_unset=True), synchronize_session=False)
+    for campo, valor in datos.model_dump(exclude_unset=True).items():
+        setattr(material, campo, valor)
+
     db.commit()
-    return material_query.first()
+    db.refresh(material)
+    return material
 
 
 def eliminar_material(db: Session, material_id: int) -> bool:
-    material_query = db.query(Material).filter(Material.id == material_id)
-    if not material_query.first():
+    """Soft delete: deja de listarse, pero el historial de movimientos que lo
+    referencia sigue siendo consultable (no se pierde el kardex)."""
+    material = obtener_material(db, material_id)
+    if not material:
         return False
 
-    material_query.delete(synchronize_session=False)
-    db.commit()
+    marcar_eliminado(db, material)
     return True
+
+
+def restaurar_material(db: Session, material_id: int) -> Optional[Material]:
+    material = obtener_material(db, material_id, incluir_eliminados=True)
+    if not material or material.fecha_eliminacion is None:
+        return None
+
+    restaurar(db, material)
+    return material
