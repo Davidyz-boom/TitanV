@@ -228,22 +228,24 @@ const TareasTab: React.FC = () => {
         {/* Columna Izquierda: Formulario de Creación */}
         <div
           style={{
-            backgroundColor: '#ffffff',
+            backgroundColor: 'rgba(16, 21, 31, 0.88)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
             padding: '24px',
-            borderRadius: '12px',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
-            border: '1px solid #e2e8f0',
+            borderRadius: '16px',
+            boxShadow: '0 16px 36px rgba(0,0,0,0.5)',
+            border: '1px solid rgba(255, 214, 10, 0.2)',
           }}
         >
-          <div style={{ borderBottom: '1px solid #f1f5f9', paddingBottom: '12px', marginBottom: '16px' }}>
-            <h2 style={{ color: '#0f172a', margin: 0, fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span>➕</span> Nueva Tarea
+          <div style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '12px', marginBottom: '16px' }}>
+            <h2 style={{ color: '#ffffff', margin: 0, fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ color: '#ffd60a' }}>➕</span> Nueva Tarea
             </h2>
           </div>
 
           <form onSubmit={crearTarea} style={{ display: 'flex', flexDirection: 'column', gap: '14px', padding: 0 }}>
             <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#475569', marginBottom: '4px', textTransform: 'uppercase' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#ffd60a', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Nombre de la Tarea *
               </label>
               <input
@@ -255,9 +257,11 @@ const TareasTab: React.FC = () => {
                 maxLength={150}
                 style={{
                   width: '100%',
-                  padding: '10px 12px',
-                  borderRadius: '6px',
-                  border: '1px solid #cbd5e1',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  backgroundColor: 'rgba(10, 13, 20, 0.85)',
+                  color: '#ffffff',
                   fontSize: '14px',
                   boxSizing: 'border-box',
                 }}
@@ -265,7 +269,7 @@ const TareasTab: React.FC = () => {
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#475569', marginBottom: '4px', textTransform: 'uppercase' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#ffd60a', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Descripción Detallada
               </label>
               <textarea
@@ -275,9 +279,11 @@ const TareasTab: React.FC = () => {
                 rows={3}
                 style={{
                   width: '100%',
-                  padding: '10px 12px',
-                  borderRadius: '6px',
-                  border: '1px solid #cbd5e1',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  backgroundColor: 'rgba(10, 13, 20, 0.85)',
+                  color: '#ffffff',
                   fontSize: '14px',
                   resize: 'vertical',
                   boxSizing: 'border-box',
@@ -288,7 +294,7 @@ const TareasTab: React.FC = () => {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#475569', marginBottom: '4px', textTransform: 'uppercase' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#ffd60a', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                   Estado Inicial
                 </label>
                 <select
@@ -296,16 +302,17 @@ const TareasTab: React.FC = () => {
                   onChange={(e) => setEstado(e.target.value)}
                   style={{
                     width: '100%',
-                    padding: '10px',
-                    borderRadius: '6px',
-                    border: '1px solid #cbd5e1',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
                     fontSize: '13px',
-                    backgroundColor: '#fff',
+                    backgroundColor: 'rgba(10, 13, 20, 0.85)',
+                    color: '#ffffff',
                     boxSizing: 'border-box',
                   }}
                 >
                   {ESTADOS_DISPONIBLES.map((est) => (
-                    <option key={est} value={est}>
+                    <option key={est} value={est} style={{ backgroundColor: '#10151f', color: '#fff' }}>
                       {est}
                     </option>
                   ))}
@@ -313,7 +320,7 @@ const TareasTab: React.FC = () => {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#475569', marginBottom: '4px', textTransform: 'uppercase' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#ffd60a', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                   Proyecto
                 </label>
                 {proyectos.length > 0 ? (
@@ -322,42 +329,29 @@ const TareasTab: React.FC = () => {
                     onChange={(e) => setProyectoId(Number(e.target.value))}
                     style={{
                       width: '100%',
-                      padding: '10px',
-                      borderRadius: '6px',
-                      border: '1px solid #cbd5e1',
+                      padding: '12px',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
                       fontSize: '13px',
-                      backgroundColor: '#fff',
+                      backgroundColor: 'rgba(10, 13, 20, 0.85)',
+                      color: '#ffffff',
                       boxSizing: 'border-box',
                     }}
                   >
                     {proyectos.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        #{p.id} - {p.nombre_proyecto}
+                      <option key={p.id} value={p.id} style={{ backgroundColor: '#10151f', color: '#fff' }}>
+                        {p.nombre_proyecto}
                       </option>
                     ))}
                   </select>
                 ) : (
-                  <input
-                    type="number"
-                    min="1"
-                    value={proyectoId}
-                    onChange={(e) => setProyectoId(Number(e.target.value) || 1)}
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      borderRadius: '6px',
-                      border: '1px solid #cbd5e1',
-                      fontSize: '13px',
-                      boxSizing: 'border-box',
-                    }}
-                    required
-                  />
+                  <span style={{ fontSize: '12px', color: '#94a3b8' }}>Cargando...</span>
                 )}
               </div>
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#475569', marginBottom: '4px', textTransform: 'uppercase' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#ffd60a', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 ID Operario Asignado
               </label>
               <input
@@ -367,9 +361,11 @@ const TareasTab: React.FC = () => {
                 onChange={(e) => setUsuarioId(Number(e.target.value) || 1)}
                 style={{
                   width: '100%',
-                  padding: '10px',
-                  borderRadius: '6px',
-                  border: '1px solid #cbd5e1',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  backgroundColor: 'rgba(10, 13, 20, 0.85)',
+                  color: '#ffffff',
                   fontSize: '13px',
                   boxSizing: 'border-box',
                 }}
@@ -381,15 +377,16 @@ const TareasTab: React.FC = () => {
               type="submit"
               disabled={guardando}
               style={{
-                backgroundColor: guardando ? '#94a3b8' : '#000000',
-                color: '#ffd60a',
+                backgroundColor: guardando ? '#64748b' : '#ffd60a',
+                color: '#000000',
                 border: 'none',
-                padding: '12px',
+                padding: '14px',
                 borderRadius: '8px',
                 cursor: guardando ? 'not-allowed' : 'pointer',
-                fontWeight: 700,
+                fontWeight: 800,
                 fontSize: '14px',
                 marginTop: '6px',
+                boxShadow: '0 4px 15px rgba(255, 214, 10, 0.25)',
                 transition: 'background 0.2s',
               }}
             >
@@ -404,11 +401,13 @@ const TareasTab: React.FC = () => {
           {/* Tarjeta de Lista de Tareas */}
           <div
             style={{
-              backgroundColor: '#ffffff',
+              backgroundColor: 'rgba(16, 21, 31, 0.88)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
               padding: '24px',
-              borderRadius: '12px',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
-              border: '1px solid #e2e8f0',
+              borderRadius: '16px',
+              boxShadow: '0 16px 36px rgba(0,0,0,0.5)',
+              border: '1px solid rgba(255, 214, 10, 0.2)',
             }}
           >
             <div
@@ -418,34 +417,35 @@ const TareasTab: React.FC = () => {
                 alignItems: 'center',
                 flexWrap: 'wrap',
                 gap: '10px',
-                borderBottom: '1px solid #f1f5f9',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
                 paddingBottom: '14px',
                 marginBottom: '16px',
               }}
             >
               <div>
-                <h2 style={{ color: '#0f172a', margin: 0, fontSize: '18px' }}>
+                <h2 style={{ color: '#ffffff', margin: 0, fontSize: '18px' }}>
                   Listado de Tareas ({tareasFiltradas.length})
                 </h2>
               </div>
 
               {/* Filtro por estado */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>Filtrar:</span>
+                <span style={{ fontSize: '12px', color: '#cbd5e1', fontWeight: 600 }}>Filtrar:</span>
                 <select
                   value={filtroEstado}
                   onChange={(e) => setFiltroEstado(e.target.value)}
                   style={{
-                    padding: '6px 10px',
-                    borderRadius: '6px',
-                    border: '1px solid #cbd5e1',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
                     fontSize: '12px',
-                    backgroundColor: '#f8fafc',
+                    backgroundColor: 'rgba(10, 13, 20, 0.85)',
+                    color: '#ffffff',
                   }}
                 >
-                  <option value="Todos">Todos los estados</option>
+                  <option value="Todos" style={{ backgroundColor: '#10151f', color: '#fff' }}>Todos los estados</option>
                   {ESTADOS_DISPONIBLES.map((est) => (
-                    <option key={est} value={est}>
+                    <option key={est} value={est} style={{ backgroundColor: '#10151f', color: '#fff' }}>
                       {est}
                     </option>
                   ))}
@@ -454,12 +454,14 @@ const TareasTab: React.FC = () => {
                   onClick={obtenerTareas}
                   title="Recargar tareas"
                   style={{
-                    backgroundColor: '#f1f5f9',
-                    border: '1px solid #cbd5e1',
-                    borderRadius: '6px',
-                    padding: '6px 10px',
+                    backgroundColor: '#ffd60a',
+                    color: '#000',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '8px 12px',
                     cursor: 'pointer',
                     fontSize: '12px',
+                    fontWeight: 700,
                   }}
                 >
                   🔄
@@ -496,24 +498,24 @@ const TareasTab: React.FC = () => {
                       key={t.id}
                       style={{
                         padding: '16px',
-                        border: estaSeleccionada ? '2px solid #ffd60a' : '1px solid #e2e8f0',
-                        backgroundColor: estaSeleccionada ? '#fffdf0' : '#ffffff',
+                        border: estaSeleccionada ? '2px solid #ffd60a' : '1px solid rgba(255, 255, 255, 0.1)',
+                        backgroundColor: estaSeleccionada ? 'rgba(255, 214, 10, 0.12)' : 'rgba(20, 26, 38, 0.75)',
                         borderRadius: '10px',
                         display: 'flex',
                         flexDirection: 'column',
                         gap: '10px',
-                        boxShadow: estaSeleccionada ? '0 4px 12px rgba(255, 214, 10, 0.2)' : 'none',
+                        boxShadow: estaSeleccionada ? '0 4px 15px rgba(255, 214, 10, 0.25)' : 'none',
                         transition: 'all 0.2s',
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
                         <div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                            <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 700 }}>#{t.id}</span>
-                            <strong style={{ color: '#0f172a', fontSize: '15px' }}>{t.nombre_tarea}</strong>
+                            <span style={{ fontSize: '12px', color: '#ffd60a', fontWeight: 700 }}>#{t.id}</span>
+                            <strong style={{ color: '#ffffff', fontSize: '15px' }}>{t.nombre_tarea}</strong>
                           </div>
                           {t.descripcion && (
-                            <p style={{ fontSize: '13px', color: '#475569', margin: '4px 0 0', lineHeight: '1.4' }}>
+                            <p style={{ fontSize: '13px', color: '#cbd5e1', margin: '4px 0 0', lineHeight: '1.4' }}>
                               {t.descripcion}
                             </p>
                           )}
@@ -528,7 +530,7 @@ const TareasTab: React.FC = () => {
                               backgroundColor: colorEst.bg,
                               color: colorEst.text,
                               border: `1px solid ${colorEst.border}`,
-                              padding: '4px 8px',
+                              padding: '5px 10px',
                               borderRadius: '6px',
                               fontWeight: 700,
                               fontSize: '12px',
@@ -537,7 +539,7 @@ const TareasTab: React.FC = () => {
                             title="Cambiar estado de la tarea"
                           >
                             {ESTADOS_DISPONIBLES.map((est) => (
-                              <option key={est} value={est} style={{ backgroundColor: '#fff', color: '#000' }}>
+                              <option key={est} value={est} style={{ backgroundColor: '#10151f', color: '#fff' }}>
                                 {est}
                               </option>
                             ))}
@@ -554,9 +556,9 @@ const TareasTab: React.FC = () => {
                           flexWrap: 'wrap',
                           gap: '8px',
                           paddingTop: '8px',
-                          borderTop: '1px solid #f1f5f9',
+                          borderTop: '1px solid rgba(255, 255, 255, 0.08)',
                           fontSize: '12px',
-                          color: '#64748b',
+                          color: '#94a3b8',
                         }}
                       >
                         <div style={{ display: 'flex', gap: '12px' }}>

@@ -10,6 +10,8 @@ import TareasTab from '../components/TareasTab';
 import { TurnosTab } from '../components/TurnosTab';
 import { EvidenciasTab } from '../components/EvidenciasTab';
 
+import videoFondo from '../assets/video_landing.mp4';
+
 interface DashboardPageProps {
   onLogout: () => void;
 }
@@ -61,7 +63,15 @@ const DashboardPage = ({ onLogout }: DashboardPageProps) => {
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f4f6f9' }}>
+    <div className="dashboard-layout">
+      {/* Video de construcción de fondo temático */}
+      <div className="dashboard-bg-video-wrapper">
+        <video autoPlay loop muted playsInline className="dashboard-bg-video">
+          <source src={videoFondo} type="video/mp4" />
+        </video>
+        <div className="dashboard-bg-overlay"></div>
+      </div>
+
       <Sidebar activeTab={tabActual} onSelectTab={irA} onLogout={handleLogout} bloqueado={bloqueado} />
 
       <div className="main-content">

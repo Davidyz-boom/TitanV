@@ -117,11 +117,13 @@ const Comentarios: React.FC<ComentariosProps> = ({ tareaId, tareaNombre, onCerra
   return (
     <div
       style={{
-        backgroundColor: '#ffffff',
-        borderRadius: '12px',
+        backgroundColor: 'rgba(16, 21, 31, 0.88)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        borderRadius: '16px',
         padding: '24px',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
-        border: '1px solid #e2e8f0',
+        boxShadow: '0 16px 36px rgba(0,0,0,0.5)',
+        border: '1px solid rgba(255, 214, 10, 0.2)',
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
@@ -139,10 +141,10 @@ const Comentarios: React.FC<ComentariosProps> = ({ tareaId, tareaNombre, onCerra
             >
               TAREA #{tareaId}
             </span>
-            <h2 style={{ color: '#0f172a', margin: 0, fontSize: '18px' }}>Comentarios</h2>
+            <h2 style={{ color: '#ffffff', margin: 0, fontSize: '18px' }}>Comentarios</h2>
           </div>
           {tareaNombre && (
-            <p style={{ color: '#475569', fontSize: '14px', margin: 0, fontWeight: 500 }}>
+            <p style={{ color: '#cbd5e1', fontSize: '14px', margin: 0, fontWeight: 500 }}>
               {tareaNombre}
             </p>
           )}
@@ -151,13 +153,13 @@ const Comentarios: React.FC<ComentariosProps> = ({ tareaId, tareaNombre, onCerra
           <button
             onClick={onCerrar}
             style={{
-              background: '#f1f5f9',
-              border: 'none',
+              background: 'rgba(255, 255, 255, 0.1)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
               borderRadius: '6px',
               cursor: 'pointer',
               padding: '6px 10px',
               fontSize: '13px',
-              color: '#64748b',
+              color: '#cbd5e1',
               fontWeight: 'bold',
             }}
             title="Cerrar panel de comentarios"
@@ -170,8 +172,9 @@ const Comentarios: React.FC<ComentariosProps> = ({ tareaId, tareaNombre, onCerra
       {mensajeError && (
         <div
           style={{
-            backgroundColor: '#fee2e2',
-            color: '#b91c1c',
+            backgroundColor: 'rgba(239, 68, 68, 0.2)',
+            color: '#fca5a5',
+            border: '1px solid rgba(239, 68, 68, 0.4)',
             padding: '10px 14px',
             borderRadius: '6px',
             fontSize: '13px',
@@ -189,15 +192,15 @@ const Comentarios: React.FC<ComentariosProps> = ({ tareaId, tareaNombre, onCerra
           display: 'flex',
           flexDirection: 'column',
           gap: '12px',
-          backgroundColor: '#f8fafc',
+          backgroundColor: 'rgba(10, 13, 20, 0.75)',
           padding: '16px',
-          borderRadius: '8px',
-          border: '1px solid #e2e8f0',
+          borderRadius: '10px',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
           marginBottom: '20px',
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <label style={{ color: '#334155', fontSize: '13px', fontWeight: 600 }}>
+          <label style={{ color: '#ffd60a', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase' }}>
             Publicar como Usuario ID:
           </label>
           <input
@@ -207,9 +210,11 @@ const Comentarios: React.FC<ComentariosProps> = ({ tareaId, tareaNombre, onCerra
             onChange={(e) => setUsuarioId(Number(e.target.value) || 1)}
             style={{
               width: '80px',
-              padding: '6px 8px',
+              padding: '8px',
               borderRadius: '6px',
-              border: '1px solid #cbd5e1',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              backgroundColor: 'rgba(5, 8, 14, 0.9)',
+              color: '#ffffff',
               fontSize: '13px',
               textAlign: 'center',
             }}
@@ -228,9 +233,11 @@ const Comentarios: React.FC<ComentariosProps> = ({ tareaId, tareaNombre, onCerra
             style={{
               display: 'block',
               width: '100%',
-              padding: '10px',
+              padding: '10px 12px',
               borderRadius: '6px',
-              border: '1px solid #cbd5e1',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              backgroundColor: 'rgba(5, 8, 14, 0.9)',
+              color: '#ffffff',
               resize: 'vertical',
               fontSize: '13px',
               boxSizing: 'border-box',
@@ -244,7 +251,7 @@ const Comentarios: React.FC<ComentariosProps> = ({ tareaId, tareaNombre, onCerra
               alignItems: 'center',
               marginTop: '4px',
               fontSize: '11px',
-              color: contenido.length > 280 ? '#dc2626' : '#64748b',
+              color: contenido.length > 280 ? '#f87171' : '#94a3b8',
             }}
           >
             <span>TV-CMT-06: Máximo 300 caracteres</span>
@@ -256,14 +263,15 @@ const Comentarios: React.FC<ComentariosProps> = ({ tareaId, tareaNombre, onCerra
           type="submit"
           disabled={enviando || !contenido.trim()}
           style={{
-            backgroundColor: enviando || !contenido.trim() ? '#94a3b8' : '#000000',
-            color: '#ffd60a',
+            backgroundColor: enviando || !contenido.trim() ? '#64748b' : '#ffd60a',
+            color: '#000000',
             border: 'none',
             borderRadius: '6px',
             padding: '10px',
             cursor: enviando || !contenido.trim() ? 'not-allowed' : 'pointer',
-            fontWeight: 'bold',
+            fontWeight: 800,
             fontSize: '13px',
+            boxShadow: '0 4px 12px rgba(255, 214, 10, 0.2)',
             transition: 'background-color 0.2s',
           }}
         >
@@ -272,23 +280,23 @@ const Comentarios: React.FC<ComentariosProps> = ({ tareaId, tareaNombre, onCerra
       </form>
 
       {/* Historial de Comentarios */}
-      <h3 style={{ color: '#0f172a', fontSize: '15px', margin: '0 0 12px 0' }}>
+      <h3 style={{ color: '#ffd60a', fontSize: '15px', margin: '0 0 12px 0', fontWeight: 800 }}>
         Historial de Comentarios ({listaComentarios.length})
       </h3>
 
       {cargando ? (
-        <div style={{ textAlign: 'center', padding: '20px', color: '#64748b', fontSize: '13px' }}>
+        <div style={{ textAlign: 'center', padding: '20px', color: '#94a3b8', fontSize: '13px' }}>
           Cargando comentarios desde la base de datos...
         </div>
       ) : listaComentarios.length === 0 ? (
         <div
           style={{
             textAlign: 'center',
-            padding: '20px',
-            backgroundColor: '#f8fafc',
+            padding: '24px',
+            backgroundColor: 'rgba(255, 255, 255, 0.03)',
             borderRadius: '8px',
-            border: '1px dashed #cbd5e1',
-            color: '#64748b',
+            border: '1px dashed rgba(255, 255, 255, 0.15)',
+            color: '#94a3b8',
             fontSize: '13px',
           }}
         >
@@ -310,8 +318,8 @@ const Comentarios: React.FC<ComentariosProps> = ({ tareaId, tareaNombre, onCerra
               key={c.id}
               style={{
                 padding: '12px',
-                backgroundColor: '#f8fafc',
-                border: '1px solid #e2e8f0',
+                backgroundColor: 'rgba(20, 26, 38, 0.75)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
                 borderRadius: '8px',
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -323,23 +331,24 @@ const Comentarios: React.FC<ComentariosProps> = ({ tareaId, tareaNombre, onCerra
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                   <span
                     style={{
-                      fontSize: '12px',
+                      fontSize: '11px',
                       fontWeight: 700,
-                      color: '#1e293b',
-                      backgroundColor: '#e2e8f0',
-                      padding: '2px 6px',
+                      color: '#ffd60a',
+                      backgroundColor: 'rgba(255, 214, 10, 0.15)',
+                      padding: '2px 8px',
                       borderRadius: '4px',
+                      border: '1px solid rgba(255, 214, 10, 0.3)',
                     }}
                   >
                     Usuario #{c.usuario_id}
                   </span>
                   {c.fecha_comentario && (
-                    <span style={{ fontSize: '11px', color: '#64748b' }}>
+                    <span style={{ fontSize: '11px', color: '#94a3b8' }}>
                       {formatearFecha(c.fecha_comentario)}
                     </span>
                   )}
                 </div>
-                <p style={{ color: '#334155', fontSize: '13px', margin: 0, whiteSpace: 'pre-wrap' }}>
+                <p style={{ color: '#e2e8f0', fontSize: '13px', margin: 0, whiteSpace: 'pre-wrap' }}>
                   {c.contenido}
                 </p>
               </div>
@@ -347,9 +356,9 @@ const Comentarios: React.FC<ComentariosProps> = ({ tareaId, tareaNombre, onCerra
               <button
                 onClick={() => manejarEliminarComentario(c.id)}
                 style={{
-                  backgroundColor: '#fee2e2',
-                  color: '#dc2626',
-                  border: '1px solid #fca5a5',
+                  backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                  color: '#fca5a5',
+                  border: '1px solid rgba(239, 68, 68, 0.4)',
                   borderRadius: '4px',
                   padding: '4px 8px',
                   cursor: 'pointer',

@@ -222,18 +222,19 @@ export const MaterialesTab = () => {
       </div>
 
       {/* PESTAÑAS INTERNAS DE NAVEGACIÓN */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '25px', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '25px', flexWrap: 'wrap' }}>
         <button
           type="button"
           onClick={() => setSubTab('asignar')}
           style={{
-            padding: '10px 18px',
+            padding: '10px 20px',
             borderRadius: '8px',
-            border: 'none',
-            fontWeight: 700,
+            border: subTab === 'asignar' ? '1px solid #ffd60a' : '1px solid rgba(255, 255, 255, 0.15)',
+            fontWeight: 800,
             cursor: 'pointer',
-            backgroundColor: subTab === 'asignar' ? '#ffd60a' : '#e2e8f0',
-            color: subTab === 'asignar' ? '#000' : '#475569',
+            backgroundColor: subTab === 'asignar' ? '#ffd60a' : 'rgba(255, 255, 255, 0.08)',
+            color: subTab === 'asignar' ? '#000' : '#e2e8f0',
+            boxShadow: subTab === 'asignar' ? '0 4px 15px rgba(255, 214, 10, 0.25)' : 'none',
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
@@ -247,13 +248,14 @@ export const MaterialesTab = () => {
           type="button"
           onClick={() => setSubTab('historial')}
           style={{
-            padding: '10px 18px',
+            padding: '10px 20px',
             borderRadius: '8px',
-            border: 'none',
-            fontWeight: 700,
+            border: subTab === 'historial' ? '1px solid #ffd60a' : '1px solid rgba(255, 255, 255, 0.15)',
+            fontWeight: 800,
             cursor: 'pointer',
-            backgroundColor: subTab === 'historial' ? '#ffd60a' : '#e2e8f0',
-            color: subTab === 'historial' ? '#000' : '#475569',
+            backgroundColor: subTab === 'historial' ? '#ffd60a' : 'rgba(255, 255, 255, 0.08)',
+            color: subTab === 'historial' ? '#000' : '#e2e8f0',
+            boxShadow: subTab === 'historial' ? '0 4px 15px rgba(255, 214, 10, 0.25)' : 'none',
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
@@ -267,13 +269,14 @@ export const MaterialesTab = () => {
           type="button"
           onClick={() => setSubTab('catalogo')}
           style={{
-            padding: '10px 18px',
+            padding: '10px 20px',
             borderRadius: '8px',
-            border: 'none',
-            fontWeight: 700,
+            border: subTab === 'catalogo' ? '1px solid #ffd60a' : '1px solid rgba(255, 255, 255, 0.15)',
+            fontWeight: 800,
             cursor: 'pointer',
-            backgroundColor: subTab === 'catalogo' ? '#ffd60a' : '#e2e8f0',
-            color: subTab === 'catalogo' ? '#000' : '#475569',
+            backgroundColor: subTab === 'catalogo' ? '#ffd60a' : 'rgba(255, 255, 255, 0.08)',
+            color: subTab === 'catalogo' ? '#000' : '#e2e8f0',
+            boxShadow: subTab === 'catalogo' ? '0 4px 15px rgba(255, 214, 10, 0.25)' : 'none',
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
