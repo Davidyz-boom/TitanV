@@ -19,6 +19,7 @@ import TurnosTab from './src/components/TurnosTab';
 import DetailModal from './src/components/DetailModal';
 import EditModal from './src/components/EditModal';
 import AddInventarioModal from './src/components/AddInventarioModal';
+import AddTurnoModal from './src/components/AddTurnoModal';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('inventarios');
@@ -43,6 +44,7 @@ export default function App() {
   const [editingType, setEditingType] = useState('usuario');
 
   const [addInvModalVisible, setAddInvModalVisible] = useState(false);
+  const [addTurnoModalVisible, setAddTurnoModalVisible] = useState(false);
 
   // Carga inicial y recarga
   const cargarDatos = useCallback(async (isRefresh = false) => {
@@ -130,6 +132,15 @@ export default function App() {
     }
   };
 
+  const handleAddTurno = async (payload) => {
+    try {
+      await dbService.crearTurno(payload);
+      await cargarDatos(true);
+    } catch (err) {
+      throw err;
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ExpoStatusBar style="dark" />
@@ -211,6 +222,7 @@ export default function App() {
                 refreshing={refreshing}
                 onRefresh={() => cargarDatos(true)}
                 onSelectItem={handleSelectItem}
+                onOpenAddModal={() => setAddTurnoModalVisible(true)}
                 onEdit={handleOpenEdit}
                 onDelete={handleDelete}
               />
@@ -241,6 +253,14 @@ export default function App() {
         materiales={materiales}
         onClose={() => setAddInvModalVisible(false)}
         onSave={handleAddInventario}
+      />
+
+      <AddTurnoModal
+        visible={addTurnoModalVisible}
+        proyectos={proyectos}
+        usuarios={usuarios}
+        onClose={() => setAddTurnoModalVisible(false)}
+        onSave={handleAddTurno}
       />
     </SafeAreaView>
   );

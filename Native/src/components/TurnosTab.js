@@ -1,7 +1,15 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, RefreshControl, Alert } from 'react-native';
 
-export default function TurnosTab({ data, refreshing, onRefresh, onSelectItem, onEdit, onDelete }) {
+export default function TurnosTab({
+  data,
+  refreshing,
+  onRefresh,
+  onSelectItem,
+  onOpenAddModal,
+  onEdit,
+  onDelete,
+}) {
   const [search, setSearch] = useState('');
   const [filtro, setFiltro] = useState('todos');
 
@@ -85,6 +93,12 @@ export default function TurnosTab({ data, refreshing, onRefresh, onSelectItem, o
 
   return (
     <View style={styles.container}>
+      <View style={styles.topRow}>
+        <TouchableOpacity style={styles.addBtn} onPress={onOpenAddModal}>
+          <Text style={styles.addBtnText}>+ Crear Turno</Text>
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
@@ -144,6 +158,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f3f4f6',
+  },
+  topRow: {
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 4,
+  },
+  addBtn: {
+    backgroundColor: '#16a34a',
+    borderRadius: 6,
+    paddingVertical: 9,
+    alignItems: 'center',
+  },
+  addBtnText: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '600',
   },
   searchContainer: {
     paddingHorizontal: 16,

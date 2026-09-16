@@ -267,6 +267,33 @@ app.get('/api/turnos', async (req, res) => {
   }
 });
 
+// CREAR turno
+app.post('/api/turnos', async (req, res) => {
+  const { proyecto_id, usuario_id, fecha_turno, hora_inicio, hora_fin, estado_asistencia } = req.body;
+  try {
+    const query = `
+      INSERT INTO turnos_relevos (proyecto_id, usuario_id, fecha_turno, hora_inicio, hora_fin, estado_asistencia)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING *;
+    `;
+    const { rows } = await pool.query(query, [
+      parseInt(proyecto_id, 10),
+      parseInt(usuario_id, 10),
+      fecha_turno,
+      hora_inicio || '07:00:00',
+      hora_fin || '15:00:00',
+      estado_asistencia || 'Programado',
+    ]);
+    res.status(201).json({
+      message: 'Turno creado con éxito en PostgreSQL',
+      data: rows[0],
+    });
+  } catch (error) {
+    console.error('Error al crear turno:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // EDITAR estado o horario de turno
 app.put('/api/turnos/:id', async (req, res) => {
   const { id } = req.params;

@@ -133,6 +133,17 @@ export const dbService = {
     }
   },
 
+  crearTurno: async (datos) => {
+    const res = await fetch(`${API_HOST}/api/turnos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(datos),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al crear turno');
+    return json;
+  },
+
   actualizarTurno: async (id, datos) => {
     const res = await fetch(`${API_HOST}/api/turnos/${id}`, {
       method: 'PUT',

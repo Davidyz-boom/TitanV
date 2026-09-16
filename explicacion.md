@@ -217,7 +217,30 @@ app.get('/api/turnos', async (req, res) => {
 * **`TO_CHAR(...)`**: Función SQL de PostgreSQL que formatea los tipos nativos de fecha y hora para que viajen como cadenas legibles por el cliente JavaScript sin desfases horarios de zona horaria (UTC vs Local).
 * **`(u.nombres || ' ' || u.apellidos)`**: Concatena el nombre completo del colaborador desde la tabla `usuarios`.
 
-#### B. Edición de Turno (`PUT /api/turnos/:id`)
+#### B. Creación de Turno (`POST /api/turnos`)
+Permite asignar un nuevo turno a un colaborador en una obra específica:
+
+```javascript
+app.post('/api/turnos', async (req, res) => {
+  const { proyecto_id, usuario_id, fecha_turno, hora_inicio, hora_fin, estado_asistencia } = req.body;
+  const query = `
+    INSERT INTO turnos_relevos (proyecto_id, usuario_id, fecha_turno, hora_inicio, hora_fin, estado_asistencia)
+    VALUES ($1, $2, $3, $4, $5, $6)
+    RETURNING *;
+  `;
+  const { rows } = await pool.query(query, [
+    parseInt(proyecto_id, 10),
+    parseInt(usuario_id, 10),
+    fecha_turno,
+    hora_inicio || '07:00:00',
+    hora_fin || '15:00:00',
+    estado_asistencia || 'Programado',
+  ]);
+  res.status(201).json({ message: 'Turno creado con éxito en PostgreSQL', data: rows[0] });
+});
+```
+
+#### C. Edición de Turno (`PUT /api/turnos/:id`)
 Permite registrar cambios en el estado de asistencia o reprogramar horarios de relevo:
 
 ```javascript
@@ -252,16 +275,19 @@ app.delete('/api/turnos/:id', async (req, res) => {
 
 ### Explicación del Código Frontend ([`TurnosTab.js`](file:///c:/Users/SENA/Desktop/Native/src/components/TurnosTab.js))
 
-1. **Visualización de Horario y Estado:**
+1. **Botón "+ Crear Turno":**
+   * Ubicado en la parte superior, abre [`AddTurnoModal.js`](file:///c:/Users/SENA/Desktop/Native/src/components/AddTurnoModal.js).
+   * Permite seleccionar el proyecto, el colaborador, la fecha y el horario, insertándolo directamente en la base de datos PostgreSQL.
+2. **Visualización de Horario y Estado:**
    * Cada tarjeta presenta el nombre del colaborador, el nombre de la obra, la fecha del turno y la franja horaria clara (`07:00:00 - 15:00:00`).
-2. **Etiquetas de Asistencia:**
+3. **Etiquetas de Asistencia:**
    * Asigna estilos sobrios y claros: azul para `En Curso`, verde para `Presente` o `Finalizado`, y amarillo para turnos especiales o justificados.
-3. **Filtros Rápidos:**
+4. **Filtros Rápidos:**
    * Filtra por turnos *Todos*, *En Curso* o *Finalizados*.
-4. **Buscador:**
+5. **Buscador:**
    * Permite localizar turnos buscando por nombre del operario, nombre del proyecto o fecha.
-5. **Edición:**
-   * Permite seleccionar el nuevo estado de asistencia con un solo toque y ajustar el horario.
+6. **Edición y Eliminación:**
+   * Permite seleccionar el nuevo estado de asistencia con un solo toque y ajustar el horario, o eliminar el turno de PostgreSQL.
 
 ---
 

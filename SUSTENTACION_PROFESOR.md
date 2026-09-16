@@ -246,8 +246,18 @@ ORDER BY tr.id ASC;
     * **Presente / Finalizado:** Verde suave.
     * **Ausente Justificado:** Amarillo suave.
   * Filtros de cabecera para ver solo los turnos *En Curso* o *Finalizados*.
+  * Botón **"+ Crear Turno"** que abre [`AddTurnoModal.js`](file:///c:/Users/SENA/Desktop/Native/src/components/AddTurnoModal.js) para registrar un nuevo turno en la base de datos.
 
-#### B. Modificación de Turno (`PUT /api/turnos/:id`)
+#### B. Creación de Turno (`POST /api/turnos`)
+El endpoint recibe los datos del formulario e inserta la tupla en PostgreSQL:
+```sql
+INSERT INTO turnos_relevos (proyecto_id, usuario_id, fecha_turno, hora_inicio, hora_fin, estado_asistencia)
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING *;
+```
+Al crearse, `App.js` llama a `cargarDatos(true)` y la lista se actualiza automáticamente.
+
+#### C. Modificación de Turno (`PUT /api/turnos/:id`)
 Permite cambiar el estado de asistencia o reprogramar los horarios:
 ```javascript
 app.put('/api/turnos/:id', async (req, res) => {
