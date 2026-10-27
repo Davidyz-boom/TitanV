@@ -30,6 +30,7 @@ class Tarea(Base):
     proyecto = relationship("ProyectoObra", back_populates="tareas")
     operario = relationship("Usuario", back_populates="tareas")
     comentarios = relationship("Comentario", back_populates="tarea", cascade="all, delete-orphan")
+    evidencias = relationship("EvidenciaMultimedia", back_populates="tarea", cascade="all, delete-orphan")
 
 
 class Comentario(Base):

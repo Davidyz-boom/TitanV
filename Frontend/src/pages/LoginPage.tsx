@@ -9,14 +9,7 @@ interface LoginPageProps {
   onLoginSuccess: () => void;
 }
 
-interface GoogleUserInfo {
-  email: string;
-  name: string;
-  picture?: string;
-  sub: string;
-}
-
-const API_URL = 'http://localhost:8000';
+const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://127.0.0.1:8000';
 
 const LoginPage = ({ onLoginSuccess }: LoginPageProps) => {
   const navigate = useNavigate();
@@ -38,15 +31,14 @@ const LoginPage = ({ onLoginSuccess }: LoginPageProps) => {
       return;
     }
     try {
-      const respuesta = await axios.post(`${API_URL}/auth/login`, {
+      const respuesta = await axios.post(`${API_URL}/api/auth/login`, {
         correo_electronico: correo.trim(),
         contrasena: contrasena,
       });
       localStorage.setItem('token', respuesta.data.token);
       localStorage.setItem('usuario_id', String(respuesta.data.usuario_id));
       localStorage.setItem('usuario_nombre', respuesta.data.nombre || 'Usuario');
-      localStorage.setItem('usuario_correo', respuesta.data.correo || correo.trim());
-      localStorage.setItem('usuario_rol', String(respuesta.data.rol ?? '3'));
+      localStorage.setItem('rol', String(respuesta.data.rol));
       onLoginSuccess();
       navigate('/dashboard');
     } catch (error: any) {
@@ -57,33 +49,22 @@ const LoginPage = ({ onLoginSuccess }: LoginPageProps) => {
 
   // ── GOOGLE OAUTH REAL ────────────────────────────────────────────────────────
   // Abre la ventana emergente ORIGINAL de Google (selector de cuenta).
-  // Después de elegir la cuenta, obtiene el perfil del usuario y lo registra
-  // o inicia sesión en PostgreSQL automáticamente via /auth/google del backend.
+  // El access_token obtenido se envía al backend, que lo vuelve a verificar
+  // contra Google server-side y toma de ahí el correo/nombre verificados.
+  // No se llama a googleapis userinfo desde el navegador: ese request
+  // cross-origin falla por CORS y produciría "Network Error".
   const iniciarConGoogle = useGoogleLogin({
     flow: 'implicit',
     onSuccess: async (tokenResponse) => {
       try {
-        // Obtener datos reales del perfil de la cuenta de Google seleccionada
-        const infoRes = await axios.get<GoogleUserInfo>(
-          'https://www.googleapis.com/oauth2/v3/userinfo',
-          { headers: { Authorization: `Bearer ${tokenResponse.access_token}` } }
-        );
-
-        const userInfo = infoRes.data;
-
-        // Registrar o autenticar en PostgreSQL via FastAPI
-        const respuesta = await axios.post(`${API_URL}/auth/google`, {
-          correo_electronico: userInfo.email,
-          nombre_completo: userInfo.name,
-          foto_url: userInfo.picture || null,
+        const respuesta = await axios.post(`${API_URL}/api/auth/google`, {
           credential: tokenResponse.access_token,
         });
 
         localStorage.setItem('token', respuesta.data.token);
         localStorage.setItem('usuario_id', String(respuesta.data.usuario_id));
-        localStorage.setItem('usuario_nombre', respuesta.data.nombre || userInfo.name);
-        localStorage.setItem('usuario_correo', respuesta.data.correo || userInfo.email);
-        localStorage.setItem('usuario_rol', String(respuesta.data.rol ?? '3'));
+        localStorage.setItem('usuario_nombre', respuesta.data.nombre);
+        localStorage.setItem('rol', String(respuesta.data.rol));
 
         onLoginSuccess();
         navigate('/dashboard');

@@ -1,9 +1,43 @@
+import re
 from datetime import date
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from app.models import RolUsuario
+
+# Solo letras (con acentos y ñ), espacios, guiones, apóstrofes y puntos.
+PATRON_NOMBRE = re.compile(r"^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ'’.\- ]{2,150}$")
+
+
+def validar_contrasena(valor: Optional[str]) -> Optional[str]:
+    """Reglas únicas de contraseña (registro y cambio de contraseña).
+
+    bcrypt solo guarda los primeros 72 bytes, así que ese es el tope real.
+    """
+    if valor is None:
+        return None
+    valor = valor.strip()
+    if len(valor) < 8:
+        raise ValueError("La contraseña debe tener al menos 8 caracteres.")
+    if len(valor.encode("utf-8")) > 72:
+        raise ValueError("La contraseña no puede superar los 72 caracteres.")
+    if not re.search(r"[A-Z]", valor):
+        raise ValueError("La contraseña debe tener al menos una letra mayúscula.")
+    if not re.search(r"[0-9]", valor):
+        raise ValueError("La contraseña debe tener al menos un número.")
+    return valor
+
+
+def validar_nombre_completo(valor: Optional[str]) -> Optional[str]:
+    if valor is None:
+        return None
+    valor = " ".join(valor.split())
+    if not PATRON_NOMBRE.fullmatch(valor):
+        raise ValueError(
+            "El nombre solo puede contener letras, espacios, puntos, guiones o apóstrofes (2 a 150 caracteres)."
+        )
+    return valor
 
 
 class UsuarioBase(BaseModel):
@@ -13,11 +47,21 @@ class UsuarioBase(BaseModel):
     fecha_vencimiento_licencia: Optional[date] = None
     tiene_certificacion_maquinaria: bool = False
 
+    @field_validator("nombre_completo")
+    @classmethod
+    def _nombre_valido(cls, valor):
+        return validar_nombre_completo(valor)
+
 
 class UsuarioCreate(UsuarioBase):
     """Esquema para el registro: exige la contraseña."""
 
-    contrasena: str = Field(..., min_length=8, max_length=100, example="ClaveSegura123*")
+    contrasena: str = Field(..., min_length=8, max_length=72, example="ClaveSegura123")
+
+    @field_validator("contrasena")
+    @classmethod
+    def _contrasena_valida(cls, valor):
+        return validar_contrasena(valor)
 
 
 class UsuarioUpdate(BaseModel):
@@ -26,7 +70,17 @@ class UsuarioUpdate(BaseModel):
     activo: Optional[bool] = None
     fecha_vencimiento_licencia: Optional[date] = None
     tiene_certificacion_maquinaria: Optional[bool] = None
-    contrasena: Optional[str] = Field(None, min_length=8, max_length=100, example="NuevaClave123*")
+    contrasena: Optional[str] = Field(None, min_length=8, max_length=72, example="NuevaClave123")
+
+    @field_validator("nombre_completo")
+    @classmethod
+    def _nombre_valido(cls, valor):
+        return validar_nombre_completo(valor)
+
+    @field_validator("contrasena")
+    @classmethod
+    def _contrasena_valida(cls, valor):
+        return validar_contrasena(valor)
 
 
 class UsuarioResponse(UsuarioBase):
@@ -40,10 +94,14 @@ class UsuarioResponse(UsuarioBase):
 
 
 class UsuarioLogin(BaseModel):
-    """TV-AUTH-02: Credenciales de inicio de sesión."""
+    """TV-AUTH-02: Credenciales de inicio de sesión.
+
+    La contraseña no se valida con las reglas de fuerza aquí: es una credencial
+    existente, y bcrypt compara truncando a 72 bytes igual que al guardarla.
+    """
 
     correo_electronico: EmailStr
-    contrasena: str
+    contrasena: str = Field(..., max_length=256)
 
 
 class TokenResponse(BaseModel):
@@ -66,8 +124,27 @@ class GoogleAuthRequest(BaseModel):
     tal cual los manda el cliente, porque esos campos se pueden falsificar.
     """
 
-    credential: str
+    credential: str = Field(..., min_length=10, max_length=4096)
     correo_electronico: Optional[EmailStr] = None
     nombre_completo: Optional[str] = None
     foto_url: Optional[str] = None
 
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class VerifyPinRequest(BaseModel):
+    email: EmailStr
+    pin: str = Field(..., min_length=4, max_length=4, pattern=r"^\d{4}$")
+
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    pin: str = Field(..., min_length=4, max_length=4, pattern=r"^\d{4}$")
+    newPassword: str = Field(..., min_length=8, max_length=72)
+
+    @field_validator("newPassword")
+    @classmethod
+    def _contrasena_valida(cls, valor):
+        return validar_contrasena(valor)
