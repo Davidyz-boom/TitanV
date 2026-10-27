@@ -21,9 +21,15 @@ const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://127.0.0.1:8000
 
 interface EvidenciasTabProps {
   proyectoId?: number;
+  rolProyecto?: string;
 }
 
-export const EvidenciasTab = ({ proyectoId: proyectoFijo }: EvidenciasTabProps) => {
+export const EvidenciasTab = ({ proyectoId: proyectoFijo, rolProyecto }: EvidenciasTabProps) => {
+  const rolSistema = Number(localStorage.getItem('rol') || 3);
+  const esAdministrador = rolSistema === 1 || rolProyecto === 'Arquitecto';
+  const esTrabajador = rolSistema === 2 || rolProyecto === 'Trabajador';
+  const esVisualizador = rolProyecto === 'Visualizador' || (!esAdministrador && !esTrabajador);
+
   const [tareas, setTareas] = useState<Tarea[]>([]);
   const [tareaId, setTareaId] = useState<number | ''>('');
   const [evidencias, setEvidencias] = useState<Evidencia[]>([]);
@@ -124,6 +130,24 @@ export const EvidenciasTab = ({ proyectoId: proyectoFijo }: EvidenciasTabProps) 
         <h2><i className="fas fa-camera"></i> Evidencias de Tareas</h2>
       </div>
 
+      {esVisualizador && (
+        <div style={{
+          backgroundColor: 'rgba(74, 222, 128, 0.12)',
+          border: '1px solid rgba(74, 222, 128, 0.35)',
+          color: '#4ade80',
+          padding: '12px 18px',
+          borderRadius: '10px',
+          marginBottom: '20px',
+          fontSize: '13px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+        }}>
+          <i className="fas fa-eye" style={{ fontSize: '16px' }}></i>
+          <span><strong>Modo Visualizador (Solo Lectura):</strong> Consulta fotos y archivos técnicos adjuntos sin modificar ni eliminar evidencias.</span>
+        </div>
+      )}
+
       <div className="input-group" style={{ maxWidth: '360px', marginBottom: '20px' }}>
         <label>Tarea</label>
         <select value={tareaId} onChange={(e) => setTareaId(e.target.value ? Number(e.target.value) : '')}>
@@ -132,29 +156,31 @@ export const EvidenciasTab = ({ proyectoId: proyectoFijo }: EvidenciasTabProps) 
         </select>
       </div>
 
-      <div className="grid">
-        <div className="card">
-          <div className="card-header"><h3><i className="fas fa-upload"></i> Subir evidencia</h3></div>
-          <form onSubmit={handleSubmit}>
-            <div className="input-group">
-              <label>Archivo (foto, PDF o video)</label>
-              <input
-                id="input-archivo-evidencia"
-                type="file"
-                accept=".jpg,.jpeg,.png,.webp,.pdf,.mp4"
-                onChange={(e) => setArchivo(e.target.files?.[0] || null)}
-                required
-              />
-            </div>
-            <div className="input-group">
-              <label>Descripción (opcional)</label>
-              <input type="text" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} placeholder="Ej: Vaciado de placa nivel 2" maxLength={300} />
-            </div>
-            <button type="submit" className="btn-save" disabled={subiendo || !tareaId}>
-              {subiendo ? 'Subiendo...' : 'Subir evidencia'}
-            </button>
-          </form>
-        </div>
+      <div className="grid" style={{ gridTemplateColumns: esVisualizador ? '1fr' : undefined }}>
+        {!esVisualizador && (
+          <div className="card">
+            <div className="card-header"><h3><i className="fas fa-upload"></i> Subir evidencia</h3></div>
+            <form onSubmit={handleSubmit}>
+              <div className="input-group">
+                <label>Archivo (foto, PDF o video)</label>
+                <input
+                  id="input-archivo-evidencia"
+                  type="file"
+                  accept=".jpg,.jpeg,.png,.webp,.pdf,.mp4"
+                  onChange={(e) => setArchivo(e.target.files?.[0] || null)}
+                  required
+                />
+              </div>
+              <div className="input-group">
+                <label>Descripción (opcional)</label>
+                <input type="text" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} placeholder="Ej: Vaciado de placa nivel 2" maxLength={300} />
+              </div>
+              <button type="submit" className="btn-save" disabled={subiendo || !tareaId}>
+                {subiendo ? 'Subiendo...' : 'Subir evidencia'}
+              </button>
+            </form>
+          </div>
+        )}
 
         <div className="card">
           <div className="card-header"><h3><i className="fas fa-images"></i> Evidencias de la tarea</h3></div>
@@ -186,9 +212,11 @@ export const EvidenciasTab = ({ proyectoId: proyectoFijo }: EvidenciasTabProps) 
                     <div style={{ fontSize: '11px', color: '#999' }}>{new Date(ev.fecha_subida).toLocaleString()}</div>
                   </div>
                 </div>
-                <button onClick={() => eliminarEvidencia(ev.id)} className="btn-delete">
-                  <i className="fas fa-trash"></i>
-                </button>
+                {esAdministrador && (
+                  <button onClick={() => eliminarEvidencia(ev.id)} className="btn-delete">
+                    <i className="fas fa-trash"></i>
+                  </button>
+                )}
               </div>
             ))}
           </div>

@@ -6,7 +6,9 @@ interface Inventario { proyecto_id: number; material_id: number; cantidad_dispon
 interface Movimiento { id: number; proyecto_id: number; material_id: number; usuario_id: number; tipo_movimiento: string; cantidad: number; fecha_movimiento: string; material_nombre?: string; unidad_medida?: string; usuario_nombre?: string; }
 
 export const InventarioTab = ({ proyectoId, proyectoNombre, rolProyecto }: { proyectoId: number; proyectoNombre?: string; rolProyecto?: string }) => {
-  const esAdministrador = rolProyecto === 'Arquitecto';
+  const rolSistema = Number(localStorage.getItem('rol') || 3);
+  const esAdministrador = rolSistema === 1 || rolProyecto === 'Arquitecto';
+  const esVisualizador = rolProyecto === 'Visualizador' || (!esAdministrador && rolProyecto !== 'Trabajador');
   const [materiales, setMateriales] = useState<Material[]>([]);
   const [inventario, setInventario] = useState<Inventario[]>([]);
   const [movimientos, setMovimientos] = useState<Movimiento[]>([]);
@@ -54,6 +56,24 @@ export const InventarioTab = ({ proyectoId, proyectoNombre, rolProyecto }: { pro
   return <div className="tab-content active">
     <div className="section-header"><h2><i className="fas fa-warehouse"></i> Inventario</h2>{proyectoNombre && <p style={{ color: '#666' }}>Obra: <strong>{proyectoNombre}</strong></p>}</div>
     {error && <div className="empty-msg" style={{ color: '#dc2626', background: '#fff', borderRadius: 10, marginBottom: 20 }}>{error}</div>}
+
+    {esVisualizador && (
+      <div style={{
+        backgroundColor: 'rgba(74, 222, 128, 0.12)',
+        border: '1px solid rgba(74, 222, 128, 0.35)',
+        color: '#4ade80',
+        padding: '12px 18px',
+        borderRadius: '10px',
+        marginBottom: '20px',
+        fontSize: '13px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
+      }}>
+        <i className="fas fa-eye" style={{ fontSize: '16px' }}></i>
+        <span><strong>Modo Visualizador (Solo Lectura):</strong> Consulta el stock de insumos por obra y los movimientos registrados en el Kardex.</span>
+      </div>
+    )}
 
     <div className="card">
       <div className="card-header"><h3><i className="fas fa-warehouse"></i> Inventario por obra</h3></div>

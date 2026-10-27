@@ -39,8 +39,10 @@ const UNIDADES_MEDIDA = [
 ];
 
 export const MaterialesTab = ({ proyectoId, proyectoNombre, rolProyecto }: MaterialesTabProps) => {
-  const esAdministrador = rolProyecto === 'Arquitecto';
-  const puedeCrearSolicitud = esAdministrador || rolProyecto === 'Trabajador';
+  const rolSistema = Number(localStorage.getItem('rol') || 3);
+  const esAdministrador = rolSistema === 1 || rolProyecto === 'Arquitecto';
+  const puedeCrearSolicitud = esAdministrador || rolSistema === 2 || rolProyecto === 'Trabajador';
+  const esVisualizador = rolProyecto === 'Visualizador' || (!esAdministrador && !puedeCrearSolicitud);
   const [materiales, setMateriales] = useState<Material[]>([]);
   const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -200,7 +202,25 @@ export const MaterialesTab = ({ proyectoId, proyectoNombre, rolProyecto }: Mater
 
       {error && <div className="empty-msg" style={{ color: '#dc2626', background: '#fff', borderRadius: 10, marginBottom: 20 }}>{error}</div>}
 
-      <div className="grid">
+      {esVisualizador && (
+        <div style={{
+          backgroundColor: 'rgba(74, 222, 128, 0.12)',
+          border: '1px solid rgba(74, 222, 128, 0.35)',
+          color: '#4ade80',
+          padding: '12px 18px',
+          borderRadius: '10px',
+          marginBottom: '20px',
+          fontSize: '13px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+        }}>
+          <i className="fas fa-eye" style={{ fontSize: '16px' }}></i>
+          <span><strong>Modo Visualizador (Solo Lectura):</strong> Consulta el catálogo de materiales y el seguimiento de solicitudes sin modificar inventarios ni aprobar pedidos.</span>
+        </div>
+      )}
+
+      <div className="grid" style={{ gridTemplateColumns: esAdministrador ? undefined : '1fr' }}>
         {esAdministrador && <div className="card">
           <div className="card-header"><h3><i className={editando ? 'fas fa-pen' : 'fas fa-plus-circle'}></i> {editando ? 'Editar material' : 'Crear material'}</h3></div>
           <form onSubmit={handleSubmit}>

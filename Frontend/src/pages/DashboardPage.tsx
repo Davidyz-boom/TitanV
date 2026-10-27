@@ -67,7 +67,15 @@ const DashboardPage = ({ onLogout }: DashboardPageProps) => {
     setTabActual('inicio');
   };
 
-  const puedeAccederTab = (_tab: string) => {
+  const rolSistema = Number(localStorage.getItem('rol') || 3);
+
+  const puedeAccederTab = (tab: string) => {
+    // Administrador general o Arquitecto del proyecto tienen acceso completo
+    if (rolSistema === 1 || rolProyecto === 'Arquitecto') return true;
+
+    // Colaboradores solo es accesible por Arquitectos / Administradores
+    if (tab === 'colaboradores') return false;
+
     return true;
   };
 
@@ -174,13 +182,13 @@ const DashboardPage = ({ onLogout }: DashboardPageProps) => {
             onSalirProyecto={salirProyecto}
             onIrA={irA}
             onCrearProyecto={crearProyecto}
-            puedeCrearProyecto={true}
+            puedeCrearProyecto={rolSistema === 1 || rolProyecto === 'Arquitecto'}
             puedeVerModulo={puedeAccederTab}
             onCambiarEstadoProyecto={cambiarEstadoProyecto}
             onEliminarProyecto={eliminarProyectoSeleccionado}
           />
         )}
-        {/* Proyectos siempre queda accesible: es la única forma de crear proyectos */}
+        {/* Proyectos siempre queda accesible */}
         {tabActual === 'proyectos' && <ProyectosTab onProyectoCreado={verificarProyectos} />}
 
         {/* Módulos: solo visibles dentro de un proyecto */}
@@ -194,13 +202,13 @@ const DashboardPage = ({ onLogout }: DashboardPageProps) => {
           <InventarioTab proyectoId={proyectoSeleccionado.id} proyectoNombre={proyectoSeleccionado.nombre_proyecto} rolProyecto={rolProyecto} />
         )}
         {proyectoSeleccionado && tabActual === 'tareas' && (
-          <TareasTab proyectoId={proyectoSeleccionado.id} />
+          <TareasTab proyectoId={proyectoSeleccionado.id} rolProyecto={rolProyecto} />
         )}
         {proyectoSeleccionado && tabActual === 'turnos' && (
-          <TurnosTab proyectoId={proyectoSeleccionado.id} />
+          <TurnosTab proyectoId={proyectoSeleccionado.id} rolProyecto={rolProyecto} />
         )}
         {proyectoSeleccionado && tabActual === 'evidencias' && (
-          <EvidenciasTab proyectoId={proyectoSeleccionado.id} />
+          <EvidenciasTab proyectoId={proyectoSeleccionado.id} rolProyecto={rolProyecto} />
         )}
       </div>
     </div>

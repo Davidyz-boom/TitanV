@@ -77,28 +77,30 @@ export const InicioTab = ({
           <p className="muted-text">
             Estado actual: <strong>{proyectoSeleccionado.estado || 'Planificación'}</strong>
           </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '14px', alignItems: 'end' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, marginBottom: '5px', color: '#666' }}>
-                  Cambiar estado
-                </label>
-                <select
-                  value={proyectoSeleccionado.estado || 'Planificación'}
-                  onChange={(e) => void onCambiarEstadoProyecto(e.target.value)}
-                  className="project-status-select"
+          {puedeCrearProyecto && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '14px', alignItems: 'end' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, marginBottom: '5px', color: '#666' }}>
+                    Cambiar estado
+                  </label>
+                  <select
+                    value={proyectoSeleccionado.estado || 'Planificación'}
+                    onChange={(e) => void onCambiarEstadoProyecto(e.target.value)}
+                    className="project-status-select"
+                  >
+                    {ESTADOS_PROYECTO.map((estado) => <option key={estado} value={estado}>{estado}</option>)}
+                  </select>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void onEliminarProyecto()}
+                  className="btn-delete"
+                  style={{ padding: '10px 14px' }}
                 >
-                  {ESTADOS_PROYECTO.map((estado) => <option key={estado} value={estado}>{estado}</option>)}
-                </select>
-              </div>
-              <button
-                type="button"
-                onClick={() => void onEliminarProyecto()}
-                className="btn-delete"
-                style={{ padding: '10px 14px' }}
-              >
-                <i className="fas fa-trash"></i> Eliminar proyecto
-              </button>
-          </div>
+                  <i className="fas fa-trash"></i> Eliminar proyecto
+                </button>
+            </div>
+          )}
         </div>
         <div className="grid">
           {MODULOS.filter((m) => puedeVerModulo(m.tab)).map((m) => (

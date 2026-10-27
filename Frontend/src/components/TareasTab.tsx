@@ -33,9 +33,13 @@ const ESTADOS_DISPONIBLES = ['Pendiente', 'En Proceso', 'Completada'];
 
 interface TareasTabProps {
   proyectoId?: number;
+  rolProyecto?: string;
 }
 
-const TareasTab: React.FC<TareasTabProps> = ({ proyectoId: proyectoFijo }) => {
+const TareasTab: React.FC<TareasTabProps> = ({ proyectoId: proyectoFijo, rolProyecto }) => {
+  const rolSistema = Number(localStorage.getItem('rol') || 3);
+  const esVisualizador = rolProyecto === 'Visualizador' || (rolSistema === 3 && rolProyecto !== 'Arquitecto' && rolProyecto !== 'Trabajador');
+
   const [tareas, setTareas] = useState<Tarea[]>([]);
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
@@ -260,16 +264,36 @@ const TareasTab: React.FC<TareasTabProps> = ({ proyectoId: proyectoFijo }) => {
         </div>
       )}
 
-      {/* Contenido en Grilla: Formulario + Listado & Comentarios */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 380px) 1fr', gap: '24px', alignItems: 'start' }}>
-        
-        {/* Columna Izquierda: Formulario de Creación */}
-        <div className="card">
-          <div className="card-header">
-            <h3><i className="fas fa-plus-circle"></i> Nueva Tarea</h3>
-          </div>
+      {/* Aviso de Modo Visualizador */}
+      {esVisualizador && (
+        <div style={{
+          backgroundColor: 'rgba(74, 222, 128, 0.12)',
+          border: '1px solid rgba(74, 222, 128, 0.35)',
+          color: '#4ade80',
+          padding: '12px 18px',
+          borderRadius: '10px',
+          marginBottom: '20px',
+          fontSize: '13px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+        }}>
+          <i className="fas fa-eye" style={{ fontSize: '16px' }}></i>
+          <span><strong>Modo Visualizador (Solo Lectura):</strong> Tu rol te permite consultar tareas, descripciones y estados de la obra sin modificar registros.</span>
+        </div>
+      )}
 
-          <form onSubmit={crearTarea}>
+      {/* Contenido en Grilla: Formulario + Listado & Comentarios */}
+      <div style={{ display: 'grid', gridTemplateColumns: esVisualizador ? '1fr' : 'minmax(320px, 380px) 1fr', gap: '24px', alignItems: 'start' }}>
+        
+        {/* Columna Izquierda: Formulario de Creación (Solo Arquitecto o Trabajador) */}
+        {!esVisualizador && (
+          <div className="card">
+            <div className="card-header">
+              <h3><i className="fas fa-plus-circle"></i> Nueva Tarea</h3>
+            </div>
+
+            <form onSubmit={crearTarea}>
             <div className="input-group">
               <label>Nombre de la tarea *</label>
               <input
@@ -349,6 +373,7 @@ const TareasTab: React.FC<TareasTabProps> = ({ proyectoId: proyectoFijo }) => {
             </button>
           </form>
         </div>
+        )}
 
         {/* Columna Derecha: Listado de Tareas y Panel de Comentarios Reubicado */}
         <div style={{ display: 'grid', gridTemplateColumns: tareaSeleccionada ? '1fr 1fr' : '1fr', gap: '20px', alignItems: 'start' }}>
@@ -452,29 +477,43 @@ const TareasTab: React.FC<TareasTabProps> = ({ proyectoId: proyectoFijo }) => {
                           )}
                         </div>
 
-                        {/* Dropdown de Estado para cambiar en tiempo real */}
+                        {/* Dropdown de Estado (o Badge si es visualizador) */}
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-                          <select
-                            value={t.estado}
-                            onChange={(e) => cambiarEstado(t.id, e.target.value)}
-                            style={{
+                          {esVisualizador ? (
+                            <span style={{
                               backgroundColor: colorEst.bg,
                               color: colorEst.text,
                               border: `1px solid ${colorEst.border}`,
-                              padding: '4px 8px',
+                              padding: '4px 10px',
                               borderRadius: '6px',
                               fontWeight: 700,
                               fontSize: '12px',
-                              cursor: 'pointer',
-                            }}
-                            title="Cambiar estado de la tarea"
-                          >
-                            {ESTADOS_DISPONIBLES.map((est) => (
-                              <option key={est} value={est} style={{ backgroundColor: '#fff', color: '#000' }}>
-                                {est}
-                              </option>
-                            ))}
-                          </select>
+                            }}>
+                              {t.estado}
+                            </span>
+                          ) : (
+                            <select
+                              value={t.estado}
+                              onChange={(e) => cambiarEstado(t.id, e.target.value)}
+                              style={{
+                                backgroundColor: colorEst.bg,
+                                color: colorEst.text,
+                                border: `1px solid ${colorEst.border}`,
+                                padding: '4px 8px',
+                                borderRadius: '6px',
+                                fontWeight: 700,
+                                fontSize: '12px',
+                                cursor: 'pointer',
+                              }}
+                              title="Cambiar estado de la tarea"
+                            >
+                              {ESTADOS_DISPONIBLES.map((est) => (
+                                <option key={est} value={est} style={{ backgroundColor: '#fff', color: '#000' }}>
+                                  {est}
+                                </option>
+                              ))}
+                            </select>
+                          )}
                         </div>
                       </div>
 
@@ -518,20 +557,22 @@ const TareasTab: React.FC<TareasTabProps> = ({ proyectoId: proyectoFijo }) => {
                             💬 {estaSeleccionada ? 'Ocultar Comentarios' : 'Ver Comentarios'}
                           </button>
 
-                          <button
-                            onClick={() => eliminarTarea(t.id, t.nombre_tarea)}
-                            className="btn-delete"
-                            style={{
-                              padding: '6px 10px',
-                              borderRadius: '6px',
-                              cursor: 'pointer',
-                              fontSize: '12px',
-                              fontWeight: 600,
-                            }}
-                            title="Eliminar tarea"
-                          >
-                            🗑
-                          </button>
+                          {!esVisualizador && (
+                            <button
+                              onClick={() => eliminarTarea(t.id, t.nombre_tarea)}
+                              className="btn-delete"
+                              style={{
+                                padding: '6px 10px',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '12px',
+                                fontWeight: 600,
+                              }}
+                              title="Eliminar tarea"
+                            >
+                              🗑
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>

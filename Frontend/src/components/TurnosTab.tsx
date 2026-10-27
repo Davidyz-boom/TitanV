@@ -25,9 +25,15 @@ const ESTADOS = ['Programado', 'Presente', 'Ausente'];
 
 interface TurnosTabProps {
   proyectoId?: number;
+  rolProyecto?: string;
 }
 
-export const TurnosTab = ({ proyectoId: proyectoFijo }: TurnosTabProps) => {
+export const TurnosTab = ({ proyectoId: proyectoFijo, rolProyecto }: TurnosTabProps) => {
+  const rolSistema = Number(localStorage.getItem('rol') || 3);
+  const esAdministrador = rolSistema === 1 || rolProyecto === 'Arquitecto';
+  const esTrabajador = rolSistema === 2 || rolProyecto === 'Trabajador';
+  const esVisualizador = rolProyecto === 'Visualizador' || (!esAdministrador && !esTrabajador);
+
   const [turnos, setTurnos] = useState<Turno[]>([]);
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
@@ -134,49 +140,70 @@ export const TurnosTab = ({ proyectoId: proyectoFijo }: TurnosTabProps) => {
       <div className="section-header">
         <h2><i className="fas fa-clock"></i> Turnos y Asistencia</h2>
       </div>
-      <div className="grid">
-        <div className="card">
-          <div className="card-header"><h3><i className="fas fa-plus-circle"></i> Programar Turno</h3></div>
-          <form onSubmit={handleSubmit}>
-            <div className="input-group">
-              <label>Proyecto</label>
-              <select value={proyectoId} onChange={(e) => setProyectoId(e.target.value ? Number(e.target.value) : '')} required>
-                <option value="">Selecciona un proyecto</option>
-                {proyectos.map((p) => <option key={p.id} value={p.id}>{p.nombre_proyecto}</option>)}
-              </select>
-            </div>
-            <div className="input-group">
-              <label>Operario</label>
-              <select value={usuarioId} onChange={(e) => setUsuarioId(e.target.value ? Number(e.target.value) : '')} required>
-                <option value="">Selecciona un operario</option>
-                {usuarios.map((u) => <option key={u.id} value={u.id}>{u.nombre_completo}</option>)}
-              </select>
-            </div>
-            <div className="input-group">
-              <label>Fecha del turno</label>
-              <input type="date" value={fechaTurno} onChange={(e) => setFechaTurno(e.target.value)} required />
-            </div>
-            <div className="date-row">
-              <div className="input-group">
-                <label>Hora inicio</label>
-                <input type="time" value={horaInicio} onChange={(e) => setHoraInicio(e.target.value)} required />
-              </div>
-              <div className="input-group">
-                <label>Hora fin</label>
-                <input type="time" value={horaFin} onChange={(e) => setHoraFin(e.target.value)} required />
-              </div>
-            </div>
-            <div className="input-group">
-              <label>Asistencia</label>
-              <select value={estadoAsistencia} onChange={(e) => setEstadoAsistencia(e.target.value)}>
-                {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
-              </select>
-            </div>
-            <button type="submit" className="btn-save" disabled={guardando}>
-              {guardando ? 'Guardando...' : 'Programar turno'}
-            </button>
-          </form>
+
+      {esVisualizador && (
+        <div style={{
+          backgroundColor: 'rgba(74, 222, 128, 0.12)',
+          border: '1px solid rgba(74, 222, 128, 0.35)',
+          color: '#4ade80',
+          padding: '12px 18px',
+          borderRadius: '10px',
+          marginBottom: '20px',
+          fontSize: '13px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+        }}>
+          <i className="fas fa-eye" style={{ fontSize: '16px' }}></i>
+          <span><strong>Modo Visualizador (Solo Lectura):</strong> Consulta turnos, horarios y registros de asistencia sin modificar la programación.</span>
         </div>
+      )}
+
+      <div className="grid" style={{ gridTemplateColumns: esVisualizador ? '1fr' : undefined }}>
+        {!esVisualizador && (
+          <div className="card">
+            <div className="card-header"><h3><i className="fas fa-plus-circle"></i> Programar Turno</h3></div>
+            <form onSubmit={handleSubmit}>
+              <div className="input-group">
+                <label>Proyecto</label>
+                <select value={proyectoId} onChange={(e) => setProyectoId(e.target.value ? Number(e.target.value) : '')} required>
+                  <option value="">Selecciona un proyecto</option>
+                  {proyectos.map((p) => <option key={p.id} value={p.id}>{p.nombre_proyecto}</option>)}
+                </select>
+              </div>
+              <div className="input-group">
+                <label>Operario</label>
+                <select value={usuarioId} onChange={(e) => setUsuarioId(e.target.value ? Number(e.target.value) : '')} required>
+                  <option value="">Selecciona un operario</option>
+                  {usuarios.map((u) => <option key={u.id} value={u.id}>{u.nombre_completo}</option>)}
+                </select>
+              </div>
+              <div className="input-group">
+                <label>Fecha del turno</label>
+                <input type="date" value={fechaTurno} onChange={(e) => setFechaTurno(e.target.value)} required />
+              </div>
+              <div className="date-row">
+                <div className="input-group">
+                  <label>Hora inicio</label>
+                  <input type="time" value={horaInicio} onChange={(e) => setHoraInicio(e.target.value)} required />
+                </div>
+                <div className="input-group">
+                  <label>Hora fin</label>
+                  <input type="time" value={horaFin} onChange={(e) => setHoraFin(e.target.value)} required />
+                </div>
+              </div>
+              <div className="input-group">
+                <label>Asistencia</label>
+                <select value={estadoAsistencia} onChange={(e) => setEstadoAsistencia(e.target.value)}>
+                  {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
+                </select>
+              </div>
+              <button type="submit" className="btn-save" disabled={guardando}>
+                {guardando ? 'Guardando...' : 'Programar turno'}
+              </button>
+            </form>
+          </div>
+        )}
 
         <div className="card">
           <div className="card-header"><h3><i className="fas fa-list"></i> Turnos registrados</h3></div>
@@ -194,18 +221,35 @@ export const TurnosTab = ({ proyectoId: proyectoFijo }: TurnosTabProps) => {
                     {nombreProyecto(t.proyecto_id)} — {t.fecha_turno} · {t.hora_inicio}–{t.hora_fin}
                   </span>
                   <div style={{ marginTop: '6px' }}>
-                    <select
-                      value={t.estado_asistencia}
-                      onChange={(e) => cambiarEstado(t.id, e.target.value)}
-                      style={{ fontSize: '12px', padding: '4px 8px' }}
-                    >
-                      {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
-                    </select>
+                    {esVisualizador ? (
+                      <span style={{
+                        display: 'inline-block',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        padding: '3px 8px',
+                        borderRadius: '4px',
+                        backgroundColor: t.estado_asistencia === 'Presente' ? 'rgba(34, 197, 94, 0.15)' : t.estado_asistencia === 'Ausente' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(255, 214, 10, 0.15)',
+                        color: t.estado_asistencia === 'Presente' ? '#15803d' : t.estado_asistencia === 'Ausente' ? '#b91c1c' : '#b45309',
+                        border: '1px solid rgba(0,0,0,0.08)'
+                      }}>
+                        {t.estado_asistencia}
+                      </span>
+                    ) : (
+                      <select
+                        value={t.estado_asistencia}
+                        onChange={(e) => cambiarEstado(t.id, e.target.value)}
+                        style={{ fontSize: '12px', padding: '4px 8px' }}
+                      >
+                        {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
+                      </select>
+                    )}
                   </div>
                 </div>
-                <button onClick={() => eliminarTurno(t.id)} className="btn-delete">
-                  <i className="fas fa-trash"></i>
-                </button>
+                {esAdministrador && (
+                  <button onClick={() => eliminarTurno(t.id)} className="btn-delete">
+                    <i className="fas fa-trash"></i>
+                  </button>
+                )}
               </div>
             ))}
           </div>

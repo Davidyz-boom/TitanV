@@ -4,13 +4,14 @@ interface SidebarProps {
   onLogout: () => void;
   proyecto: { id: number; nombre_proyecto: string } | null;
   onSalirProyecto: () => void;
+  puedeVerModulo?: (tab: string) => boolean;
 }
 
 const ITEMS_MODULO = ['colaboradores', 'materiales', 'inventario', 'tareas', 'turnos', 'evidencias'];
 
-export const Sidebar = ({ activeTab, onSelectTab, onLogout, proyecto, onSalirProyecto }: SidebarProps) => {
+export const Sidebar = ({ activeTab, onSelectTab, onLogout, proyecto, onSalirProyecto, puedeVerModulo }: SidebarProps) => {
   const sinProyecto = !proyecto;
-  const puedeVer = (_tab: string) => true;
+  const puedeVer = (tab: string) => (puedeVerModulo ? puedeVerModulo(tab) : true);
 
   const manejarClick = (tab: string) => {
     if (sinProyecto && ITEMS_MODULO.includes(tab)) {

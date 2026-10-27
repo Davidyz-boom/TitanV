@@ -34,6 +34,8 @@ export const ProyectosTab = ({ onProyectoCreado }: ProyectosTabProps = {}) => {
   const [generandoEnlace, setGenerandoEnlace] = useState(false);
 
   const usuarioId = localStorage.getItem('usuario_id') || '1';
+  const rolSistema = Number(localStorage.getItem('rol') || 3);
+  const esAdministrador = rolSistema === 1;
 
   const cargarProyectos = async () => {
     setCargando(true);
@@ -141,39 +143,60 @@ export const ProyectosTab = ({ onProyectoCreado }: ProyectosTabProps = {}) => {
       <div className="section-header">
         <h2><i className="fas fa-project-diagram"></i> Panel de Proyectos Activos</h2>
       </div>
-      <div className="grid">
-        <div className="card">
-          <div className="card-header"><h3><i className="fas fa-plus-circle"></i> Crear Nuevo Proyecto</h3></div>
-          <form onSubmit={handleSubmit}>
-            <div className="input-group">
-              <label>Nombre de la Obra</label>
-              <input type="text" value={nombreProyecto} onChange={(e) => setNombreProyecto(e.target.value)} placeholder="Ej: Edificio Calle 100" required />
-            </div>
-            <div className="input-group">
-              <label>Ubicación</label>
-              <input type="text" value={ubicacion} onChange={(e) => setUbicacion(e.target.value)} placeholder="Ej: Calle 100 #15-30, Bogotá" required />
-            </div>
-            <div className="input-group">
-              <label>Estado</label>
-              <select value={estado} onChange={(e) => setEstado(e.target.value as Proyecto['estado'])}>
-                {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
-              </select>
-            </div>
-            <div className="date-row">
-              <div className="input-group">
-                <label>Fecha Inicio</label>
-                <input type="date" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} required />
-              </div>
-              <div className="input-group">
-                <label>Fin Estimado</label>
-                <input type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} required />
-              </div>
-            </div>
-            <button type="submit" className="btn-save" disabled={guardando}>
-              {guardando ? 'Guardando...' : 'Registrar e Iniciar Obra'}
-            </button>
-          </form>
+
+      {!esAdministrador && (
+        <div style={{
+          backgroundColor: 'rgba(56, 189, 248, 0.12)',
+          border: '1px solid rgba(56, 189, 248, 0.35)',
+          color: '#38bdf8',
+          padding: '12px 18px',
+          borderRadius: '10px',
+          marginBottom: '20px',
+          fontSize: '13px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+        }}>
+          <i className="fas fa-shield-halved" style={{ fontSize: '16px' }}></i>
+          <span><strong>Modo Consulta de Obras:</strong> La creación, eliminación y emisión de enlaces de invitación a proyectos es exclusiva de Administradores y Arquitectos líderes.</span>
         </div>
+      )}
+
+      <div className="grid" style={{ gridTemplateColumns: esAdministrador ? undefined : '1fr' }}>
+        {esAdministrador && (
+          <div className="card">
+            <div className="card-header"><h3><i className="fas fa-plus-circle"></i> Crear Nuevo Proyecto</h3></div>
+            <form onSubmit={handleSubmit}>
+              <div className="input-group">
+                <label>Nombre de la Obra</label>
+                <input type="text" value={nombreProyecto} onChange={(e) => setNombreProyecto(e.target.value)} placeholder="Ej: Edificio Calle 100" required />
+              </div>
+              <div className="input-group">
+                <label>Ubicación</label>
+                <input type="text" value={ubicacion} onChange={(e) => setUbicacion(e.target.value)} placeholder="Ej: Calle 100 #15-30, Bogotá" required />
+              </div>
+              <div className="input-group">
+                <label>Estado</label>
+                <select value={estado} onChange={(e) => setEstado(e.target.value as Proyecto['estado'])}>
+                  {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
+                </select>
+              </div>
+              <div className="date-row">
+                <div className="input-group">
+                  <label>Fecha Inicio</label>
+                  <input type="date" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} required />
+                </div>
+                <div className="input-group">
+                  <label>Fin Estimado</label>
+                  <input type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} required />
+                </div>
+              </div>
+              <button type="submit" className="btn-save" disabled={guardando}>
+                {guardando ? 'Guardando...' : 'Registrar e Iniciar Obra'}
+              </button>
+            </form>
+          </div>
+        )}
 
         <div className="card">
           <div className="card-header"><h3><i className="fas fa-list"></i> Obras Registradas</h3></div>
@@ -190,17 +213,19 @@ export const ProyectosTab = ({ onProyectoCreado }: ProyectosTabProps = {}) => {
                     <h4>{p.nombre_proyecto}</h4>
                     <span style={{ fontSize: '12px', color: '#666' }}>{p.ubicacion_direccion} — {p.estado}</span>
                   </div>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button
-                      onClick={() => abrirGeneradorEnlace(p.id)}
-                      style={{ background: '#ffd60a', border: 'none', borderRadius: '6px', padding: '6px 12px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
-                    >
-                      <i className="fas fa-share-nodes"></i> Compartir
-                    </button>
-                    <button onClick={() => eliminarProyecto(p.id, p.nombre_proyecto)} className="btn-delete">
-                      <i className="fas fa-trash"></i>
-                    </button>
-                  </div>
+                  {esAdministrador && (
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        onClick={() => abrirGeneradorEnlace(p.id)}
+                        style={{ background: '#ffd60a', border: 'none', borderRadius: '6px', padding: '6px 12px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
+                      >
+                        <i className="fas fa-share-nodes"></i> Compartir
+                      </button>
+                      <button onClick={() => eliminarProyecto(p.id, p.nombre_proyecto)} className="btn-delete">
+                        <i className="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {proyectoEnlaceId === p.id && (
