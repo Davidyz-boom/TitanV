@@ -1,4 +1,3 @@
-import os
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
@@ -9,11 +8,11 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
+from app.core.config import ALGORITHM, SECRET_KEY
 from app.core.database import get_db
 from app.models import Usuario
 from app.schemas import UsuarioLogin
 
-from app.core.config import ALGORITHM, SECRET_KEY
 MINUTOS_EXPIRACION_TOKEN = 60 * 8  # 8 horas
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
@@ -35,17 +34,9 @@ def verificar_contrasena(contrasena_plana: str, contrasena_hasheada: str) -> boo
 
 
 # --- Autenticación (login) ---
-
-def autenticar_usuario(db: Session, credenciales: UsuarioLogin) -> Optional[Usuario]:
-    """Busca al usuario y valida la contraseña. Devuelve None si las credenciales no son válidas."""
-    usuario = db.query(Usuario).filter(Usuario.correo_electronico == credenciales.correo_electronico).first()
-    if not usuario:
-        return None
-
-    if not verificar_contrasena(credenciales.contrasena, usuario.contrasena_encriptada):
-        return None
-
-    return usuario
+# La validación de credenciales vive en el router /api/auth/login, que además
+# aplica límite de intentos por IP y bloqueo temporal de la cuenta
+# (ver app.services.proteccion_service). No duplicarla aquí.
 
 
 # --- JWT ---

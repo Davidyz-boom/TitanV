@@ -11,7 +11,7 @@ class EvidenciaMultimedia(Base):
     __tablename__ = "evidencias_multimedia"
 
     id = Column(Integer, primary_key=True, index=True)
-    proyecto_id = Column(Integer, ForeignKey("proyectos_obra.id", ondelete="CASCADE"), nullable=False)
+    tarea_id = Column(Integer, ForeignKey("tareas.id", ondelete="CASCADE"), nullable=False)
     usuario_id = Column(Integer, ForeignKey("usuarios.id_usuario", ondelete="CASCADE"), nullable=False)
     nombre_archivo = Column(String(255), nullable=False)
     ruta_archivo = Column(String(255), nullable=False)
@@ -19,7 +19,7 @@ class EvidenciaMultimedia(Base):
     fecha_subida = Column(DateTime, server_default=func.now(), nullable=False)
     fecha_eliminacion = Column(DateTime, nullable=True, default=None)
 
-    proyecto = relationship("ProyectoObra", back_populates="evidencias")
+    tarea = relationship("Tarea", back_populates="evidencias")
     usuario = relationship("Usuario")
 
 

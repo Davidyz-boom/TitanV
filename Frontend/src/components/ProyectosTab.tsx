@@ -28,16 +28,20 @@ export const ProyectosTab = ({ onProyectoCreado }: ProyectosTabProps = {}) => {
   const [fechaFin, setFechaFin] = useState('');
   const [guardando, setGuardando] = useState(false);
 
-  const rolStorage = localStorage.getItem('usuario_rol');
-  const esAdmin = Number(rolStorage) === 1;
+  const [proyectoEnlaceId, setProyectoEnlaceId] = useState<number | null>(null);
+  const [rolEnlace, setRolEnlace] = useState<'Trabajador' | 'Visualizador'>('Trabajador');
+  const [enlaceGenerado, setEnlaceGenerado] = useState('');
+  const [generandoEnlace, setGenerandoEnlace] = useState(false);
+
   const usuarioId = localStorage.getItem('usuario_id') || '1';
+  const rolSistema = Number(localStorage.getItem('rol') || 3);
+  const esAdministrador = rolSistema === 1;
 
   const cargarProyectos = async () => {
     setCargando(true);
     setError('');
     try {
-      const url = esAdmin ? '/proyectos/' : `/proyectos/?usuario_id=${usuarioId}`;
-      const respuesta = await fetchConToken(url);
+      const respuesta = await fetchConToken(`/proyectos/?usuario_id=${usuarioId}`);
       if (!respuesta.ok) throw new Error('No se pudieron cargar los proyectos.');
       setProyectos(await respuesta.json());
     } catch (err: any) {
@@ -103,44 +107,96 @@ export const ProyectosTab = ({ onProyectoCreado }: ProyectosTabProps = {}) => {
     }
   };
 
+  const abrirGeneradorEnlace = (id: number) => {
+    setProyectoEnlaceId(id);
+    setRolEnlace('Trabajador');
+    setEnlaceGenerado('');
+  };
+
+  const generarEnlace = async () => {
+    if (!proyectoEnlaceId) return;
+    setGenerandoEnlace(true);
+    try {
+      const respuesta = await fetchConToken(`/proyectos/${proyectoEnlaceId}/enlaces`, {
+        method: 'POST',
+        body: JSON.stringify({ rol: rolEnlace }),
+      });
+      const data = await respuesta.json();
+      if (!respuesta.ok) throw new Error(data?.detail || 'No se pudo generar el enlace.');
+
+      const url = `${window.location.origin}/invitacion/${data.token}`;
+      setEnlaceGenerado(url);
+    } catch (err: any) {
+      alert(err.message || 'No se pudo generar el enlace.');
+    } finally {
+      setGenerandoEnlace(false);
+    }
+  };
+
+  const copiarEnlace = () => {
+    navigator.clipboard.writeText(enlaceGenerado);
+    alert('Enlace copiado. Compártelo con la persona que quieres invitar.');
+  };
+
   return (
     <div className="tab-content active">
       <div className="section-header">
         <h2><i className="fas fa-project-diagram"></i> Panel de Proyectos Activos</h2>
       </div>
-      <div className="grid">
-        <div className="card">
-          <div className="card-header"><h3><i className="fas fa-plus-circle"></i> Crear Nuevo Proyecto</h3></div>
-          <form onSubmit={handleSubmit}>
-            <div className="input-group">
-              <label>Nombre de la Obra</label>
-              <input type="text" value={nombreProyecto} onChange={(e) => setNombreProyecto(e.target.value)} placeholder="Ej: Edificio Calle 100" required />
-            </div>
-            <div className="input-group">
-              <label>Ubicación</label>
-              <input type="text" value={ubicacion} onChange={(e) => setUbicacion(e.target.value)} placeholder="Ej: Calle 100 #15-30, Bogotá" required />
-            </div>
-            <div className="input-group">
-              <label>Estado</label>
-              <select value={estado} onChange={(e) => setEstado(e.target.value as Proyecto['estado'])}>
-                {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
-              </select>
-            </div>
-            <div className="date-row">
-              <div className="input-group">
-                <label>Fecha Inicio</label>
-                <input type="date" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} required />
-              </div>
-              <div className="input-group">
-                <label>Fin Estimado</label>
-                <input type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} required />
-              </div>
-            </div>
-            <button type="submit" className="btn-save" disabled={guardando}>
-              {guardando ? 'Guardando...' : 'Registrar e Iniciar Obra'}
-            </button>
-          </form>
+
+      {!esAdministrador && (
+        <div style={{
+          backgroundColor: 'rgba(56, 189, 248, 0.12)',
+          border: '1px solid rgba(56, 189, 248, 0.35)',
+          color: '#38bdf8',
+          padding: '12px 18px',
+          borderRadius: '10px',
+          marginBottom: '20px',
+          fontSize: '13px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+        }}>
+          <i className="fas fa-shield-halved" style={{ fontSize: '16px' }}></i>
+          <span><strong>Modo Consulta de Obras:</strong> La creación, eliminación y emisión de enlaces de invitación a proyectos es exclusiva de Administradores y Arquitectos líderes.</span>
         </div>
+      )}
+
+      <div className="grid" style={{ gridTemplateColumns: esAdministrador ? undefined : '1fr' }}>
+        {esAdministrador && (
+          <div className="card">
+            <div className="card-header"><h3><i className="fas fa-plus-circle"></i> Crear Nuevo Proyecto</h3></div>
+            <form onSubmit={handleSubmit}>
+              <div className="input-group">
+                <label>Nombre de la Obra</label>
+                <input type="text" value={nombreProyecto} onChange={(e) => setNombreProyecto(e.target.value)} placeholder="Ej: Edificio Calle 100" required />
+              </div>
+              <div className="input-group">
+                <label>Ubicación</label>
+                <input type="text" value={ubicacion} onChange={(e) => setUbicacion(e.target.value)} placeholder="Ej: Calle 100 #15-30, Bogotá" required />
+              </div>
+              <div className="input-group">
+                <label>Estado</label>
+                <select value={estado} onChange={(e) => setEstado(e.target.value as Proyecto['estado'])}>
+                  {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
+                </select>
+              </div>
+              <div className="date-row">
+                <div className="input-group">
+                  <label>Fecha Inicio</label>
+                  <input type="date" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} required />
+                </div>
+                <div className="input-group">
+                  <label>Fin Estimado</label>
+                  <input type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} required />
+                </div>
+              </div>
+              <button type="submit" className="btn-save" disabled={guardando}>
+                {guardando ? 'Guardando...' : 'Registrar e Iniciar Obra'}
+              </button>
+            </form>
+          </div>
+        )}
 
         <div className="card">
           <div className="card-header"><h3><i className="fas fa-list"></i> Obras Registradas</h3></div>
@@ -151,14 +207,63 @@ export const ProyectosTab = ({ onProyectoCreado }: ProyectosTabProps = {}) => {
               <div className="empty-msg">No hay proyectos registrados actualmente.</div>
             )}
             {!cargando && proyectos.map((p) => (
-              <div key={p.id} className="project-item">
-                <div>
-                  <h4>{p.nombre_proyecto}</h4>
-                  <span style={{ fontSize: '12px', color: '#666' }}>{p.ubicacion_direccion} — {p.estado}</span>
+              <div key={p.id} className="project-item" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <h4>{p.nombre_proyecto}</h4>
+                    <span style={{ fontSize: '12px', color: '#666' }}>{p.ubicacion_direccion} — {p.estado}</span>
+                  </div>
+                  {esAdministrador && (
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        onClick={() => abrirGeneradorEnlace(p.id)}
+                        style={{ background: '#ffd60a', border: 'none', borderRadius: '6px', padding: '6px 12px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
+                      >
+                        <i className="fas fa-share-nodes"></i> Compartir
+                      </button>
+                      <button onClick={() => eliminarProyecto(p.id, p.nombre_proyecto)} className="btn-delete">
+                        <i className="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  )}
                 </div>
-                <button onClick={() => eliminarProyecto(p.id, p.nombre_proyecto)} className="btn-delete">
-                  <i className="fas fa-trash"></i>
-                </button>
+
+                {proyectoEnlaceId === p.id && (
+                  <div style={{ marginTop: '10px', padding: '12px', background: '#f8f9fa', borderRadius: '8px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>
+                      Rol para quien entre con este enlace
+                    </label>
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+                      <select
+                        value={rolEnlace}
+                        onChange={(e) => setRolEnlace(e.target.value as 'Trabajador' | 'Visualizador')}
+                        style={{ flex: 1, padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                      >
+                        <option value="Trabajador">Trabajador (puede subir avances)</option>
+                        <option value="Visualizador">Visualizador (solo puede ver)</option>
+                      </select>
+                      <button
+                        onClick={generarEnlace}
+                        disabled={generandoEnlace}
+                        style={{ background: '#000', color: '#ffd60a', border: 'none', borderRadius: '6px', padding: '8px 14px', fontWeight: 700, cursor: 'pointer' }}
+                      >
+                        {generandoEnlace ? 'Generando...' : 'Generar enlace'}
+                      </button>
+                    </div>
+                    {enlaceGenerado && (
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <input readOnly value={enlaceGenerado} style={{ flex: 1, padding: '8px', fontSize: '12px', borderRadius: '6px', border: '1px solid #cbd5e1' }} />
+                        <button onClick={copiarEnlace} style={{ background: '#ffd60a', border: 'none', borderRadius: '6px', padding: '8px 12px', fontWeight: 700, cursor: 'pointer' }}>
+                          Copiar
+                        </button>
+                      </div>
+                    )}
+                    <p style={{ fontSize: '11px', color: '#888', marginTop: '8px', marginBottom: 0 }}>
+                      El enlace expira en 7 días. Cualquiera que entre a Titan V con este link queda vinculado
+                      con el rol que elegiste arriba — no necesitas saber su correo de antemano.
+                    </p>
+                  </div>
+                )}
               </div>
             ))}
           </div>

@@ -34,3 +34,15 @@ class ColaboradorResponse(BaseModel):
 
 # Alias agregado para solucionar el error del router
 ColaboradorCreate = ColaboradorInvitar
+
+
+class InvitacionCorreoResponse(BaseModel):
+    """Respuesta al intentar invitar por correo: siempre incluye el enlace
+    generado para que el Arquitecto pueda compartirlo manualmente si el
+    envío de correo falló (por ejemplo, sin configuración SMTP)."""
+
+    correo_electronico: str
+    rol: RolProyecto
+    enlace_url: str
+    correo_enviado: bool
+    mensaje: str

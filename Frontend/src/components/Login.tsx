@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { CardAccion } from './CardAccion';
 import Registro from './Registro';
+import RecuperarContrasena from './RecuperarContrasena';
 // IMPORTACIÓN CORRECTA DEL VIDEO DESDE TU CARPETA ASSETS
 import videoLogin from '../assets/video_login.mp4'; 
-import logoImg from '../assets/logo.png'; 
 
 export interface LoginProps {
   correo: string;
@@ -12,7 +12,7 @@ export interface LoginProps {
   onContrasenaChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onEnviar: (e: React.FormEvent) => void;
   onGoogleLogin?: () => void;
-  onVolverPrincipal?: () => void;
+  onVolverPrincipal: () => void;
 }
 
 export const Login: React.FC<LoginProps> = ({
@@ -26,13 +26,13 @@ export const Login: React.FC<LoginProps> = ({
 }) => {
 
   const [mostrarRegistro, setMostrarRegistro] = useState(false);
+  const [showForgotModal, setShowForgotModal] = useState(false);
 
   const manejarRegistro = (datos: {
     nombre: string;
     apellido: string;
     correo: string;
     telefono: string;
-    usuario: string;
     contrasena: string;
   }) => {
     console.log('Módulo Login - Registro recibido:', datos);
@@ -92,11 +92,35 @@ export const Login: React.FC<LoginProps> = ({
         zIndex: 2
       }} />
 
+      <button
+        type="button"
+        onClick={onVolverPrincipal}
+        style={{
+          position: 'absolute',
+          top: '24px',
+          left: '24px',
+          zIndex: 3,
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '10px 15px',
+          backgroundColor: 'rgba(18, 18, 18, 0.86)',
+          border: '1px solid rgba(255, 204, 0, 0.55)',
+          borderRadius: '999px',
+          color: '#ffcc00',
+          fontWeight: 700,
+          cursor: 'pointer',
+          boxShadow: '0 4px 15px rgba(0,0,0,0.35)',
+        }}
+      >
+        <i className="fas fa-arrow-left" /> Volver al inicio
+      </button>
+
       {/* TARJETA DEL FORMULARIO DE INICIO DE SESIÓN */}
       <div style={{
         backgroundColor: 'rgba(30, 30, 30, 0.88)',
         backdropFilter: 'blur(12px)',
-        padding: '36px 32px 32px',
+        padding: '32px',
         borderRadius: '14px',
         boxShadow: '0 8px 30px rgba(0,0,0,0.7), 0 0 20px rgba(255, 204, 0, 0.2)',
         width: '360px',
@@ -106,59 +130,14 @@ export const Login: React.FC<LoginProps> = ({
         zIndex: 3
       }}>
 
-        {/* FLECHA PARA VOLVER AL PORTAL PRINCIPAL */}
-        {onVolverPrincipal && (
-          <button
-            type="button"
-            onClick={onVolverPrincipal}
-            title="Volver al portal principal"
-            style={{
-              position: 'absolute',
-              top: '14px',
-              left: '14px',
-              background: 'rgba(255, 204, 0, 0.15)',
-              border: '1px solid rgba(255, 204, 0, 0.4)',
-              borderRadius: '8px',
-              padding: '6px 10px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              color: '#ffcc00',
-              cursor: 'pointer',
-              fontSize: '12px',
-              fontWeight: 700,
-              transition: 'all 0.2s',
-            }}
-          >
-            <i className="fas fa-arrow-left"></i> Inicio
-          </button>
-        )}
-
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginTop: '10px' }}>
-          <div style={{
-            width: '46px',
-            height: '46px',
-            borderRadius: '50%',
-            backgroundColor: '#141414',
-            border: '2px solid #ffcc00',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            overflow: 'hidden',
-            boxShadow: '0 0 12px rgba(255, 204, 0, 0.35)',
-            flexShrink: 0,
-          }}>
-            <img src={logoImg} alt="Titan V Logo" style={{ width: '82%', height: '82%', objectFit: 'contain' }} />
-          </div>
-          <h2 style={{
-            color: '#fff',
-            margin: 0,
-            fontSize: '26px',
-            letterSpacing: '1px'
-          }}>
-            TITAN <span style={{ color: '#ffcc00' }}>V</span>
-          </h2>
-        </div>
+        <h2 style={{
+          color: '#fff',
+          margin: '0 0 5px 0',
+          fontSize: '26px',
+          letterSpacing: '1px'
+        }}>
+          TITAN <span style={{ color: '#ffcc00' }}>V</span>
+        </h2>
 
         <p style={{
           color: '#aaa',
@@ -245,10 +224,29 @@ export const Login: React.FC<LoginProps> = ({
             </button>
           )}
 
+          {/* BOTÓN OLVIDASTE TU CONTRASEÑA */}
+          <div style={{ textAlign: 'center', marginTop: '16px', marginBottom: '4px' }}>
+            <button
+              type="button"
+              onClick={() => setShowForgotModal(true)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#ffcc00',
+                fontSize: '12px',
+                cursor: 'pointer',
+                textDecoration: 'underline',
+                padding: 0
+              }}
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
+          </div>
+
         </form>
 
         <div style={{
-          marginTop: '22px',
+          marginTop: '18px',
           fontSize: '12px'
         }}>
 
@@ -275,7 +273,33 @@ export const Login: React.FC<LoginProps> = ({
 
         </div>
 
+        {/* Roles informativos al pie */}
+        <div style={{
+          marginTop: '16px',
+          paddingTop: '12px',
+          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+          display: 'flex',
+          justifyContent: 'center',
+          gap: '6px',
+          flexWrap: 'wrap'
+        }}>
+          <span style={{ fontSize: '10px', padding: '2px 7px', borderRadius: '4px', backgroundColor: 'rgba(255, 214, 10, 0.15)', color: '#ffd60a', border: '1px solid rgba(255, 214, 10, 0.3)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+            <i className="fas fa-crown" style={{ fontSize: '8px' }}></i> Admin
+          </span>
+          <span style={{ fontSize: '10px', padding: '2px 7px', borderRadius: '4px', backgroundColor: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+            <i className="fas fa-helmet-safety" style={{ fontSize: '8px' }}></i> Supervisor
+          </span>
+          <span style={{ fontSize: '10px', padding: '2px 7px', borderRadius: '4px', backgroundColor: 'rgba(74, 222, 128, 0.15)', color: '#4ade80', border: '1px solid rgba(74, 222, 128, 0.3)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+            <i className="fas fa-eye" style={{ fontSize: '8px' }}></i> Operario
+          </span>
+        </div>
+
       </div>
+
+      {showForgotModal && (
+        <RecuperarContrasena onClose={() => setShowForgotModal(false)} />
+      )}
+
     </div>
   );
 };

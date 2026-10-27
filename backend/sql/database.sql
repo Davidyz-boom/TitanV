@@ -45,6 +45,8 @@ CREATE TABLE usuarios (
 	activo BOOLEAN, 
 	fecha_vencimiento_licencia DATE, 
 	tiene_certificacion_maquinaria BOOLEAN, 
+	reset_pin VARCHAR(4), 
+	reset_pin_expira TIMESTAMP WITHOUT TIME ZONE, 
 	PRIMARY KEY (id_usuario), 
 	UNIQUE (correo_electronico)
 );

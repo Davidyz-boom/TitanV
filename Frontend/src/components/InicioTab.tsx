@@ -1,155 +1,189 @@
 import videoHero from '../assets/video_landing.mp4';
 import logoImg from '../assets/logo.png';
 
-interface InicioTabProps {
-  onIrA: (tab: string) => void;
-  tieneProyectos: boolean;
-  cargando: boolean;
+interface ProyectoResumen {
+  id: number;
+  nombre_proyecto: string;
+  ubicacion_direccion?: string;
+  estado?: string;
 }
 
-const ACCESOS_ADMIN = [
-  { tab: 'proyectos', icono: 'fa-diagram-project', titulo: 'Proyectos de Obra', texto: 'Crea, visualiza y administra todas las obras del sistema.' },
-  { tab: 'materiales', icono: 'fa-boxes-stacked', titulo: 'Inventario de Insumos', texto: 'Asigna materiales a obras, agrega insumos y consulta el historial.' },
-  { tab: 'usuarios', icono: 'fa-users', titulo: 'Gestión de Usuarios', texto: 'Administra usuarios y asigna roles en tiempo real.' },
-  { tab: 'tareas', icono: 'fa-tasks', titulo: 'Gestión de Tareas', texto: 'Supervisa estado de tareas y gestiona comentarios técnicos.' },
+interface InicioTabProps {
+  proyectos: ProyectoResumen[];
+  cargando: boolean;
+  proyectoSeleccionado: ProyectoResumen | null;
+  onEntrarProyecto: (proyecto: ProyectoResumen) => void;
+  onSalirProyecto: () => void;
+  onIrA: (tab: string) => void;
+  onCrearProyecto: () => void;
+  puedeCrearProyecto: boolean;
+  puedeVerModulo: (tab: string) => boolean;
+  onCambiarEstadoProyecto: (estado: string) => Promise<void>;
+  onEliminarProyecto: () => Promise<void>;
+}
+
+const ESTADOS_PROYECTO = ['Planificación', 'En Ejecución', 'Finalizado'];
+
+const MODULOS = [
+  { tab: 'colaboradores', icono: 'fa-user-group', titulo: 'Colaboradores', texto: 'Invita por correo y gestiona los roles del equipo.' },
+  { tab: 'materiales', icono: 'fa-boxes-stacked', titulo: 'Inventario Insumos', texto: 'Controla entradas y stock de material.' },
+  { tab: 'inventario', icono: 'fa-warehouse', titulo: 'Inventario', texto: 'Consulta el stock y el historial de movimientos de materiales.' },
+  { tab: 'tareas', icono: 'fa-tasks', titulo: 'Gestión de Tareas', texto: 'Crea tareas, supervisa su estado y gestiona comentarios técnicos.' },
   { tab: 'turnos', icono: 'fa-clock', titulo: 'Turnos y Asistencia', texto: 'Programa turnos y registra la asistencia del equipo.' },
-  { tab: 'evidencias', icono: 'fa-camera', titulo: 'Evidencias de Obra', texto: 'Supervisa las fotos y documentos del avance de cada proyecto.' },
+  { tab: 'evidencias', icono: 'fa-camera', titulo: 'Evidencias de Obra', texto: 'Sube fotos y documentos del avance del proyecto.' },
 ];
 
-const ACCESOS_USUARIO = [
-  { tab: 'proyectos', icono: 'fa-diagram-project', titulo: 'Proyectos de Obra', texto: 'Crea tu obra y consulta el estado de tus proyectos.' },
-  { tab: 'evidencias', icono: 'fa-camera', titulo: 'Evidencias de Obra', texto: 'Sube fotografías, planos y documentos de avance de tu proyecto.' },
-];
-
-export const InicioTab = ({ onIrA, tieneProyectos, cargando }: InicioTabProps) => {
-  const rolStorage = localStorage.getItem('usuario_rol');
-  const rol = Number(rolStorage !== null ? rolStorage : '3');
-  const esAdmin = rol === 1;
-  const nombreUsuario = localStorage.getItem('usuario_nombre') || 'Usuario';
-
-  const accesos = esAdmin ? ACCESOS_ADMIN : ACCESOS_USUARIO;
-
+export const InicioTab = ({
+  proyectos,
+  cargando,
+  proyectoSeleccionado,
+  onEntrarProyecto,
+  onSalirProyecto,
+  onIrA,
+  onCrearProyecto,
+  puedeCrearProyecto,
+  puedeVerModulo,
+  onCambiarEstadoProyecto,
+  onEliminarProyecto,
+}: InicioTabProps) => {
   if (cargando) {
     return (
-      <div className="tab-content active animated-fadeIn">
+      <div className="tab-content active">
         <div className="section-header">
-          <h2 style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{
-              width: '38px',
-              height: '38px',
-              borderRadius: '50%',
-              backgroundColor: '#141414',
-              border: '2px solid #ffd60a',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              overflow: 'hidden',
-              boxShadow: '0 0 10px rgba(255, 214, 10, 0.3)',
-              flexShrink: 0
-            }}>
-              <img src={logoImg} alt="Titan V" style={{ width: '80%', height: '80%', objectFit: 'contain' }} />
-            </div>
-            <span>Bienvenido a Titan V</span>
-          </h2>
+          <h2><i className="fas fa-house"></i> Bienvenido a Titan V</h2>
         </div>
-        <p style={{ color: '#666' }}>Cargando información del sistema...</p>
+        <p className="muted-text">Cargando...</p>
       </div>
     );
   }
 
+  // Dentro de un proyecto: atajos a los módulos del proyecto activo.
+  if (proyectoSeleccionado) {
+    return (
+      <div className="tab-content active animated-fadeIn">
+        <div className="panel-hero-banner panel-hero-project">
+          <video autoPlay loop muted playsInline className="panel-hero-video">
+            <source src={videoHero} type="video/mp4" />
+          </video>
+          <div className="panel-hero-overlay" />
+          <div className="panel-hero-content">
+            <div className="panel-hero-badge"><img src={logoImg} alt="" /> Proyecto activo</div>
+            <h1 className="panel-hero-title">{proyectoSeleccionado.nombre_proyecto}</h1>
+            <p className="panel-hero-subtitle">Gestiona el equipo, los insumos y el avance de esta obra desde un solo lugar.</p>
+          </div>
+        </div>
+        <div className="section-header">
+          <h2><i className="fas fa-grid-2"></i> Módulos de la obra</h2>
+          <p className="muted-text">
+            Estado actual: <strong>{proyectoSeleccionado.estado || 'Planificación'}</strong>
+          </p>
+          {puedeCrearProyecto && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '14px', alignItems: 'end' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, marginBottom: '5px', color: '#666' }}>
+                    Cambiar estado
+                  </label>
+                  <select
+                    value={proyectoSeleccionado.estado || 'Planificación'}
+                    onChange={(e) => void onCambiarEstadoProyecto(e.target.value)}
+                    className="project-status-select"
+                  >
+                    {ESTADOS_PROYECTO.map((estado) => <option key={estado} value={estado}>{estado}</option>)}
+                  </select>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void onEliminarProyecto()}
+                  className="btn-delete"
+                  style={{ padding: '10px 14px' }}
+                >
+                  <i className="fas fa-trash"></i> Eliminar proyecto
+                </button>
+            </div>
+          )}
+        </div>
+        <div className="grid">
+          {MODULOS.filter((m) => puedeVerModulo(m.tab)).map((m) => (
+            <div key={m.tab} className="card card-interactive" onClick={() => onIrA(m.tab)}>
+              <div className="card-header">
+                <h3><span className="card-icon-bubble"><i className={`fas ${m.icono}`}></i></span> {m.titulo}</h3>
+              </div>
+              <p className="card-description">{m.texto}</p>
+              <div className="card-footer-action">Abrir módulo <i className="fas fa-arrow-right"></i></div>
+            </div>
+          ))}
+        </div>
+        <button
+          onClick={onSalirProyecto}
+          style={{
+            marginTop: '20px',
+            backgroundColor: '#f1f5f9',
+            border: '1px solid #cbd5e1',
+            borderRadius: '8px',
+            padding: '10px 16px',
+            fontWeight: 700,
+            color: '#475569',
+            cursor: 'pointer',
+          }}
+        >
+          <i className="fas fa-arrow-left"></i> Cambiar de proyecto
+        </button>
+      </div>
+    );
+  }
+
+  // Sin proyecto activo: listar proyectos para entrar o crear uno.
   return (
     <div className="tab-content active animated-fadeIn">
-      {/* HERO BANNER CON VIDEO DE CONSTRUCCIÓN ANIMADO */}
       <div className="panel-hero-banner">
         <video autoPlay loop muted playsInline className="panel-hero-video">
           <source src={videoHero} type="video/mp4" />
-          Tu navegador no soporta video.
         </video>
-        <div className="panel-hero-overlay"></div>
+        <div className="panel-hero-overlay" />
         <div className="panel-hero-content">
-          <div className="panel-hero-badge">
-            <div style={{
-              width: '22px',
-              height: '22px',
-              borderRadius: '50%',
-              backgroundColor: '#141414',
-              border: '1.5px solid #ffd60a',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              overflow: 'hidden',
-              marginRight: '6px',
-              flexShrink: 0
-            }}>
-              <img src={logoImg} alt="Titan V" style={{ width: '80%', height: '80%', objectFit: 'contain' }} />
-            </div>
-            <span>PLATAFORMA DE CONTROL CONSTRUCTIVO TITAN V</span>
-          </div>
-          <h1 className="panel-hero-title">
-            ¡Hola, <span className="highlight">{nombreUsuario}</span>!
-          </h1>
-          <p className="panel-hero-subtitle">
-            {esAdmin
-              ? 'Panel de control maestro: Tienes acceso total para gestionar obras, insumos, tareas y usuarios.'
-              : 'Bienvenido a tu panel de obra. Puedes crear tu proyecto y registrar las evidencias de avance.'}
-          </p>
-          <div className="panel-hero-tags">
-            <span className={`hero-tag ${esAdmin ? 'tag-admin' : 'tag-user'}`}>
-              <i className={esAdmin ? 'fas fa-shield-alt' : 'fas fa-user-check'}></i>
-              {esAdmin ? 'Modo Administrador' : 'Modo Usuario / Constructor'}
-            </span>
-            <span className="hero-tag tag-status">
-              <i className="fas fa-circle-dot"></i> Sistema Conectado a PostgreSQL
-            </span>
-          </div>
+          <div className="panel-hero-badge"><img src={logoImg} alt="" /> Plataforma de control constructivo</div>
+          <h1 className="panel-hero-title">Bienvenido a <span>Titan V</span></h1>
+          <p className="panel-hero-subtitle">Selecciona una obra para administrar cada detalle de tu operación.</p>
         </div>
       </div>
-
-      <div className="section-header" style={{ marginTop: '25px' }}>
-        <h2><i className="fas fa-th-large"></i> Accesos Rápidos</h2>
+      <div className="section-header">
+        <h2><i className="fas fa-diagram-project"></i> Mis proyectos</h2>
+        <p className="muted-text">Entra a un proyecto para trabajar en sus módulos, o crea uno nuevo.</p>
       </div>
 
-      {/* Si es usuario y no tiene proyectos aún, mostrar sugerencia */}
-      {!tieneProyectos && !esAdmin && (
-        <div
-          className="card card-animated-pulse"
-          style={{ cursor: 'pointer', maxWidth: '520px', marginBottom: '25px', borderLeft: '4px solid #ffd60a' }}
-          onClick={() => onIrA('proyectos')}
-        >
-          <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <i className="fas fa-plus-circle" style={{ color: '#ffd60a', fontSize: '18px' }}></i>
-            <h3 style={{ margin: 0 }}>Crea tu primer proyecto de obra</h3>
-          </div>
-          <p style={{ padding: '16px 20px', color: '#555', fontSize: '14px', margin: 0 }}>
-            Para comenzar a subir evidencias y gestionar tu construcción, crea tu primer proyecto aquí.
-          </p>
-        </div>
-      )}
-
-      {/* GRILLA DE TARJETAS ANIMADAS */}
       <div className="grid">
-        {accesos.map((a) => (
-          <div
-            key={a.tab}
-            className="card card-interactive"
-            style={{ cursor: 'pointer' }}
-            onClick={() => onIrA(a.tab)}
-          >
-            <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div className="card-icon-bubble">
-                <i className={`fas ${a.icono}`}></i>
-              </div>
-              <h3 style={{ margin: 0 }}>{a.titulo}</h3>
-            </div>
-            <p style={{ padding: '20px 25px', color: '#666', fontSize: '14px', lineHeight: 1.5, margin: 0 }}>
-              {a.texto}
-            </p>
-            <div className="card-footer-action">
-              <span>Ingresar</span>
-              <i className="fas fa-arrow-right"></i>
-            </div>
+        {puedeCrearProyecto && <div
+          className="card card-interactive create-project-card"
+          onClick={onCrearProyecto}
+        >
+          <div className="card-header" style={{ justifyContent: 'center' }}>
+            <h3><i className="fas fa-plus-circle"></i> Crear proyecto</h3>
           </div>
-        ))}
+          <p className="card-description">
+            Registra una nueva obra para empezar a gestionar su equipo, inventario, tareas y evidencias.
+          </p>
+        </div>}
+
+        {proyectos.length === 0 ? (
+          <div className="card">
+            <div className="card-header">
+              <h3><i className="fas fa-diagram-project"></i> Mis proyectos</h3>
+            </div>
+            <p className="empty-msg">Todavía no tienes ningún proyecto. Crea el primero para comenzar.</p>
+          </div>
+        ) : (
+          proyectos.map((p) => (
+            <div key={p.id} className="card card-interactive" onClick={() => onEntrarProyecto(p)}>
+              <div className="card-header">
+                <h3><i className="fas fa-diagram-project"></i> {p.nombre_proyecto}</h3>
+              </div>
+              <p className="card-description">
+                {p.ubicacion_direccion ? p.ubicacion_direccion : 'Sin ubicación registrada.'}
+              </p>
+              <div className="card-footer-action">Entrar al proyecto <i className="fas fa-arrow-right"></i></div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

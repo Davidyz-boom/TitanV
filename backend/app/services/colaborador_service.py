@@ -2,8 +2,8 @@ from typing import List, Optional
 
 from sqlalchemy.orm import Session
 
-from app.models import ProyectoColaborador, RolProyecto, Usuario
-from app.schemas import ColaboradorInvitar, ColaboradorUpdate
+from app.models import ProyectoColaborador, RolProyecto
+from app.schemas import ColaboradorUpdate
 
 
 def _adaptar(colaborador: ProyectoColaborador) -> ProyectoColaborador:
@@ -12,6 +12,17 @@ def _adaptar(colaborador: ProyectoColaborador) -> ProyectoColaborador:
     colaborador.usuario_nombre = f"{colaborador.usuario.nombres} {colaborador.usuario.apellidos}".strip()
     colaborador.usuario_correo = colaborador.usuario.correo_electronico
     return colaborador
+
+
+def proyectos_de_usuario(db: Session, usuario_id: int) -> List[int]:
+    """Ids de los proyectos donde el usuario participa como colaborador. Un
+    usuario SOLO debe ver y tocar datos de estos proyectos."""
+    filas = (
+        db.query(ProyectoColaborador.proyecto_id)
+        .filter(ProyectoColaborador.usuario_id == usuario_id)
+        .all()
+    )
+    return [fila[0] for fila in filas]
 
 
 def listar_colaboradores(db: Session, proyecto_id: int) -> List[ProyectoColaborador]:
@@ -43,30 +54,6 @@ def obtener_rol_de_usuario(db: Session, proyecto_id: int, usuario_id: int) -> Op
 def agregar_arquitecto(db: Session, proyecto_id: int, usuario_id: int) -> ProyectoColaborador:
     """Se llama automáticamente al crear un proyecto: quien lo crea queda como Arquitecto."""
     nuevo = ProyectoColaborador(proyecto_id=proyecto_id, usuario_id=usuario_id, rol=RolProyecto.ARQUITECTO.value)
-    db.add(nuevo)
-    db.commit()
-    db.refresh(nuevo)
-    return _adaptar(nuevo)
-
-
-def invitar_colaborador(db: Session, proyecto_id: int, datos: ColaboradorInvitar) -> ProyectoColaborador:
-    usuario = db.query(Usuario).filter(Usuario.correo_electronico == datos.correo_electronico).first()
-    if not usuario:
-        raise ValueError(
-            "No existe ninguna cuenta con ese correo. La persona debe registrarse en Titan V primero."
-        )
-
-    ya_es_colaborador = (
-        db.query(ProyectoColaborador)
-        .filter(ProyectoColaborador.proyecto_id == proyecto_id, ProyectoColaborador.usuario_id == usuario.id_usuario)
-        .first()
-    )
-    if ya_es_colaborador:
-        raise ValueError("Esa persona ya es colaboradora de este proyecto.")
-
-    nuevo = ProyectoColaborador(
-        proyecto_id=proyecto_id, usuario_id=usuario.id_usuario, rol=datos.rol.value
-    )
     db.add(nuevo)
     db.commit()
     db.refresh(nuevo)

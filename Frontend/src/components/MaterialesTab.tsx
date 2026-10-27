@@ -1,603 +1,308 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { fetchConToken } from '../api';
 
 interface Material {
   id: number;
   nombre_material: string;
   unidad_medida: string;
-}
-
-interface Proyecto {
-  id: number;
-  nombre_proyecto: string;
-}
-
-interface InventarioItem {
   proyecto_id: number;
-  material_id: number;
+  cantidad_inicial: number;
   cantidad_disponible: number;
 }
 
-interface MovimientoItem {
+interface Solicitud {
   id: number;
   proyecto_id: number;
   material_id: number;
   usuario_id: number;
-  tipo_movimiento: string;
   cantidad: number;
-  fecha_movimiento: string;
+  estado: 'Pendiente' | 'Aprobada' | 'Rechazada' | 'Entregada';
+  fecha_solicitud: string;
+  material_nombre?: string;
+  unidad_medida?: string;
+  usuario_nombre?: string;
 }
 
-export const MaterialesTab = () => {
-  const [subTab, setSubTab] = useState<'asignar' | 'historial' | 'catalogo'>('asignar');
+interface MaterialesTabProps {
+  proyectoId: number;
+  proyectoNombre?: string;
+  rolProyecto?: string;
+}
 
-  // Estados generales
+const estadoClass = (estado: Solicitud['estado']) => `estado estado-${estado.toLowerCase()}`;
+
+const UNIDADES_MEDIDA = [
+  'Unidad', 'Bulto', 'Saco', 'Caja', 'Rollo', 'Varilla',
+  'Kilogramo (kg)', 'Gramo (g)', 'Tonelada (t)',
+  'Litro (L)', 'Galón',
+  'Metro (m)', 'Metro cuadrado (m²)', 'Metro cúbico (m³)',
+];
+
+export const MaterialesTab = ({ proyectoId, proyectoNombre, rolProyecto }: MaterialesTabProps) => {
+  const rolSistema = Number(localStorage.getItem('rol') || 3);
+  const esAdministrador = rolSistema === 1 || rolProyecto === 'Arquitecto';
+  const puedeCrearSolicitud = esAdministrador || rolSistema === 2 || rolProyecto === 'Trabajador';
+  const esVisualizador = rolProyecto === 'Visualizador' || (!esAdministrador && !puedeCrearSolicitud);
   const [materiales, setMateriales] = useState<Material[]>([]);
-  const [proyectos, setProyectos] = useState<Proyecto[]>([]);
+  const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
   const [cargando, setCargando] = useState(true);
-
-  // Estados para nuevo material en catálogo
+  const [error, setError] = useState('');
+  const [busqueda, setBusqueda] = useState('');
+  const [editando, setEditando] = useState<Material | null>(null);
   const [nombre, setNombre] = useState('');
   const [unidad, setUnidad] = useState('');
-  const [guardandoCatalogo, setGuardandoCatalogo] = useState(false);
+  const [cantidadInicial, setCantidadInicial] = useState('');
+  const [materialSolicitud, setMaterialSolicitud] = useState('');
+  const [cantidadSolicitud, setCantidadSolicitud] = useState('');
+  const [guardando, setGuardando] = useState(false);
+  const [guardandoSolicitud, setGuardandoSolicitud] = useState(false);
 
-  // Estados para asignar / registrar movimiento a obra
-  const [proyectoSeleccionado, setProyectoSeleccionado] = useState<number | ''>('');
-  const [materialSeleccionado, setMaterialSeleccionado] = useState<number | ''>('');
-  const [tipoMovimiento, setTipoMovimiento] = useState<'Entrada' | 'Salida'>('Entrada');
-  const [cantidad, setCantidad] = useState<number | ''>('');
-  const [guardandoMovimiento, setGuardandoMovimiento] = useState(false);
-  const [stockObra, setStockObra] = useState<InventarioItem[]>([]);
-
-  // Estados para historial
-  const [historial, setHistorial] = useState<MovimientoItem[]>([]);
-  const [filtroObraHistorial, setFiltroObraHistorial] = useState<number | ''>('');
-  const [cargandoHistorial, setCargandoHistorial] = useState(false);
-
-  // Cargar catálogo y proyectos iniciales
-  const cargarDatosIniciales = async () => {
+  const cargarDatos = async () => {
     setCargando(true);
+    setError('');
     try {
-      const [resMat, resProy] = await Promise.all([
-        fetchConToken('/materiales/'),
-        fetchConToken('/proyectos/'),
+      const [materialesResp, solicitudesResp] = await Promise.all([
+        fetchConToken(`/materiales/?proyecto_id=${proyectoId}`),
+        fetchConToken(`/solicitudes/?proyecto_id=${proyectoId}`),
       ]);
-
-      if (resMat.ok) setMateriales(await resMat.json());
-      if (resProy.ok) {
-        const proys = await resProy.json();
-        setProyectos(proys);
-        if (proys.length > 0 && !proyectoSeleccionado) {
-          setProyectoSeleccionado(proys[0].id);
-        }
-      }
-    } catch (err) {
-      console.error('Error al cargar datos de materiales:', err);
+      if (!materialesResp.ok) throw new Error('No se pudieron cargar los materiales.');
+      if (!solicitudesResp.ok) throw new Error('No se pudieron cargar las solicitudes.');
+      setMateriales(await materialesResp.json());
+      setSolicitudes(await solicitudesResp.json());
+    } catch (err: any) {
+      setError(err.message || 'No se pudieron cargar los datos.');
     } finally {
       setCargando(false);
     }
   };
 
   useEffect(() => {
-    cargarDatosIniciales();
+    cargarDatos();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [proyectoId]);
 
-  // Cargar inventario del proyecto seleccionado
-  const cargarStockObra = async (proyId: number) => {
-    try {
-      const res = await fetchConToken(`/movimientos/inventario/${proyId}`);
-      if (res.ok) {
-        setStockObra(await res.json());
-      } else {
-        setStockObra([]);
-      }
-    } catch {
-      setStockObra([]);
-    }
+  const materialesFiltrados = useMemo(() => {
+    const termino = busqueda.trim().toLowerCase();
+    if (!termino) return materiales;
+    return materiales.filter((m) => `${m.nombre_material} ${m.unidad_medida}`.toLowerCase().includes(termino));
+  }, [materiales, busqueda]);
+
+  const limpiarFormulario = () => {
+    setNombre('');
+    setUnidad('');
+    setCantidadInicial('');
+    setEditando(null);
   };
 
-  useEffect(() => {
-    if (proyectoSeleccionado) {
-      cargarStockObra(Number(proyectoSeleccionado));
-    }
-  }, [proyectoSeleccionado]);
-
-  // Cargar historial de movimientos
-  const cargarHistorial = async () => {
-    setCargandoHistorial(true);
-    try {
-      const url = filtroObraHistorial
-        ? `/movimientos/?proyecto_id=${filtroObraHistorial}`
-        : '/movimientos/';
-      const res = await fetchConToken(url);
-      if (res.ok) {
-        setHistorial(await res.json());
-      }
-    } catch (err) {
-      console.error('Error al cargar historial:', err);
-    } finally {
-      setCargandoHistorial(false);
-    }
-  };
-
-  useEffect(() => {
-    if (subTab === 'historial') {
-      cargarHistorial();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subTab, filtroObraHistorial]);
-
-  // Manejar creación de material en catálogo
-  const handleCrearCatalogo = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nombre || !unidad) return;
-
-    setGuardandoCatalogo(true);
+    if (!esAdministrador) return;
+    if (!nombre.trim() || !unidad.trim()) return;
+    const cantidad = Number(cantidadInicial);
+    if (!editando && (!Number.isFinite(cantidad) || cantidad < 0)) return;
+    setGuardando(true);
     try {
-      const res = await fetchConToken('/materiales/', {
-        method: 'POST',
-        body: JSON.stringify({ nombre_material: nombre, unidad_medida: unidad }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        throw new Error(data?.detail || 'No se pudo crear el material.');
+      const respuesta = editando
+        ? await fetchConToken(`/materiales/${editando.id}`, {
+            method: 'PUT',
+            body: JSON.stringify({ nombre_material: nombre.trim(), unidad_medida: unidad.trim() }),
+          })
+        : await fetchConToken('/materiales/', {
+            method: 'POST',
+            body: JSON.stringify({
+              nombre_material: nombre.trim(),
+              unidad_medida: unidad.trim(),
+              cantidad_inicial: cantidad,
+              proyecto_id: proyectoId,
+            }),
+          });
+      if (!respuesta.ok) {
+        const data = await respuesta.json().catch(() => null);
+        throw new Error(data?.detail || 'No se pudo guardar el material.');
       }
-      setNombre('');
-      setUnidad('');
-      await cargarDatosIniciales();
-      alert('✅ Material agregado al catálogo correctamente.');
+      limpiarFormulario();
+      await cargarDatos();
     } catch (err: any) {
-      alert(`⚠️ ${err.message || 'Error al guardar material.'}`);
+      alert(err.message || 'No se pudo guardar el material.');
     } finally {
-      setGuardandoCatalogo(false);
+      setGuardando(false);
     }
   };
 
-  // Manejar asignación / entrada / salida de material en la obra
-  const handleRegistrarMovimiento = async (e: React.FormEvent) => {
+  const iniciarEdicion = (material: Material) => {
+    if (!esAdministrador) return;
+    setEditando(material);
+    setNombre(material.nombre_material);
+    setUnidad(material.unidad_medida);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const eliminarMaterial = async (id: number, nombreMaterial: string) => {
+    if (!esAdministrador) return;
+    if (!window.confirm(`¿Eliminar "${nombreMaterial}" del catálogo?`)) return;
+    try {
+      const respuesta = await fetchConToken(`/materiales/${id}`, { method: 'DELETE' });
+      if (!respuesta.ok && respuesta.status !== 204) {
+        const data = await respuesta.json().catch(() => null);
+        throw new Error(data?.detail || 'No se pudo eliminar el material.');
+      }
+      await cargarDatos();
+    } catch (err: any) {
+      alert(err.message || 'No se pudo eliminar el material.');
+    }
+  };
+
+  const crearSolicitud = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!proyectoSeleccionado || !materialSeleccionado || !cantidad || Number(cantidad) <= 0) {
-      alert('Por favor completa todos los campos requeridos con una cantidad válida.');
-      return;
-    }
-
-    setGuardandoMovimiento(true);
+    if (!puedeCrearSolicitud) return;
+    const cantidad = Number(cantidadSolicitud);
+    if (!materialSolicitud || !Number.isFinite(cantidad) || cantidad <= 0) return;
+    setGuardandoSolicitud(true);
     try {
-      const res = await fetchConToken('/movimientos/', {
+      const respuesta = await fetchConToken('/solicitudes/', {
         method: 'POST',
-        body: JSON.stringify({
-          proyecto_id: Number(proyectoSeleccionado),
-          material_id: Number(materialSeleccionado),
-          tipo_movimiento: tipoMovimiento,
-          cantidad: Number(cantidad),
-        }),
+        body: JSON.stringify({ proyecto_id: proyectoId, material_id: Number(materialSolicitud), cantidad }),
       });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        throw new Error(data?.detail || 'Error al registrar movimiento.');
+      if (!respuesta.ok) {
+        const data = await respuesta.json().catch(() => null);
+        throw new Error(data?.detail || 'No se pudo crear la solicitud.');
       }
-
-      alert(
-        tipoMovimiento === 'Entrada'
-          ? `✅ Se agregaron ${cantidad} unidades de material a la obra correctamente.`
-          : `✅ Se registraron ${cantidad} unidades de material como utilizadas en la obra.`
-      );
-
-      setCantidad('');
-      await cargarStockObra(Number(proyectoSeleccionado));
-      if (subTab === 'historial') await cargarHistorial();
+      setMaterialSolicitud('');
+      setCantidadSolicitud('');
+      await cargarDatos();
     } catch (err: any) {
-      alert(`⚠️ ${err.message || 'No se pudo registrar el movimiento.'}`);
+      alert(err.message || 'No se pudo crear la solicitud.');
     } finally {
-      setGuardandoMovimiento(false);
+      setGuardandoSolicitud(false);
     }
   };
 
-  const getNombreMaterial = (matId: number) => {
-    const mat = materiales.find((m) => m.id === matId);
-    return mat ? mat.nombre_material : `Material #${matId}`;
+  const cambiarEstado = async (solicitud: Solicitud, estado: Solicitud['estado']) => {
+    if (!esAdministrador) return;
+    try {
+      const respuesta = await fetchConToken(`/solicitudes/${solicitud.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ estado }),
+      });
+      const data = await respuesta.json().catch(() => null);
+      if (!respuesta.ok) throw new Error(data?.detail || 'No se pudo actualizar la solicitud.');
+      await cargarDatos();
+    } catch (err: any) {
+      alert(err.message || 'No se pudo actualizar la solicitud.');
+    }
   };
 
-  const getUnidadMaterial = (matId: number) => {
-    const mat = materiales.find((m) => m.id === matId);
-    return mat ? mat.unidad_medida : '';
-  };
-
-  const getNombreProyecto = (proyId: number) => {
-    const proy = proyectos.find((p) => p.id === proyId);
-    return proy ? proy.nombre_proyecto : `Obra #${proyId}`;
-  };
-
+  
   return (
-    <div className="tab-content active animated-fadeIn">
+    <div className="tab-content active materiales-page">
       <div className="section-header">
-        <h2>
-          <i className="fas fa-boxes-stacked"></i> Gestión de Materiales e Inventario de Obras
-        </h2>
-        <p style={{ color: '#666', marginTop: '4px', fontSize: '14px' }}>
-          Asigna los materiales que necesita cada obra, agrega insumos adicionales en cualquier momento y consulta el historial de uso.
-        </p>
+        <h2><i className="fas fa-boxes-stacked"></i> Materiales</h2>
+        {proyectoNombre && <p style={{ color: '#666' }}>Proyecto activo: <strong>{proyectoNombre}</strong></p>}
       </div>
 
-      {/* PESTAÑAS INTERNAS DE NAVEGACIÓN */}
-      <div style={{ display: 'flex', gap: '12px', marginBottom: '25px', flexWrap: 'wrap' }}>
-        <button
-          type="button"
-          onClick={() => setSubTab('asignar')}
-          style={{
-            padding: '10px 20px',
-            borderRadius: '8px',
-            border: subTab === 'asignar' ? '1px solid #ffd60a' : '1px solid rgba(255, 255, 255, 0.15)',
-            fontWeight: 800,
-            cursor: 'pointer',
-            backgroundColor: subTab === 'asignar' ? '#ffd60a' : 'rgba(255, 255, 255, 0.08)',
-            color: subTab === 'asignar' ? '#000' : '#e2e8f0',
-            boxShadow: subTab === 'asignar' ? '0 4px 15px rgba(255, 214, 10, 0.25)' : 'none',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            transition: '0.2s',
-          }}
-        >
-          <i className="fas fa-dolly"></i> Asignar Insumos a la Obra
-        </button>
+      {error && <div className="empty-msg" style={{ color: '#dc2626', background: '#fff', borderRadius: 10, marginBottom: 20 }}>{error}</div>}
 
-        <button
-          type="button"
-          onClick={() => setSubTab('historial')}
-          style={{
-            padding: '10px 20px',
-            borderRadius: '8px',
-            border: subTab === 'historial' ? '1px solid #ffd60a' : '1px solid rgba(255, 255, 255, 0.15)',
-            fontWeight: 800,
-            cursor: 'pointer',
-            backgroundColor: subTab === 'historial' ? '#ffd60a' : 'rgba(255, 255, 255, 0.08)',
-            color: subTab === 'historial' ? '#000' : '#e2e8f0',
-            boxShadow: subTab === 'historial' ? '0 4px 15px rgba(255, 214, 10, 0.25)' : 'none',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            transition: '0.2s',
-          }}
-        >
-          <i className="fas fa-history"></i> Historial de Materiales Utilizados
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setSubTab('catalogo')}
-          style={{
-            padding: '10px 20px',
-            borderRadius: '8px',
-            border: subTab === 'catalogo' ? '1px solid #ffd60a' : '1px solid rgba(255, 255, 255, 0.15)',
-            fontWeight: 800,
-            cursor: 'pointer',
-            backgroundColor: subTab === 'catalogo' ? '#ffd60a' : 'rgba(255, 255, 255, 0.08)',
-            color: subTab === 'catalogo' ? '#000' : '#e2e8f0',
-            boxShadow: subTab === 'catalogo' ? '0 4px 15px rgba(255, 214, 10, 0.25)' : 'none',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            transition: '0.2s',
-          }}
-        >
-          <i className="fas fa-list"></i> Catálogo General de Materiales
-        </button>
-      </div>
-
-      {/* SUB-PESTAÑA 1: ASIGNAR MATERIALES / AGREGAR MÁS INSUMOS A LA OBRA */}
-      {subTab === 'asignar' && (
-        <div className="grid">
-          {/* FORMULARIO DE ASIGNACIÓN */}
-          <div className="card">
-            <div className="card-header">
-              <h3>
-                <i className="fas fa-plus-circle"></i> Asignar / Agregar Material a la Obra
-              </h3>
-            </div>
-            <form onSubmit={handleRegistrarMovimiento}>
-              <div className="input-group">
-                <label>Obra de Destino</label>
-                <select
-                  value={proyectoSeleccionado}
-                  onChange={(e) => setProyectoSeleccionado(e.target.value ? Number(e.target.value) : '')}
-                  required
-                >
-                  <option value="">-- Seleccionar Obra --</option>
-                  {proyectos.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.nombre_proyecto}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="input-group">
-                <label>Material requerido</label>
-                <select
-                  value={materialSeleccionado}
-                  onChange={(e) => setMaterialSeleccionado(e.target.value ? Number(e.target.value) : '')}
-                  required
-                >
-                  <option value="">-- Seleccionar Material del Catálogo --</option>
-                  {materiales.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.nombre_material} ({m.unidad_medida})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="input-group">
-                <label>Acción</label>
-                <select
-                  value={tipoMovimiento}
-                  onChange={(e) => setTipoMovimiento(e.target.value as 'Entrada' | 'Salida')}
-                >
-                  <option value="Entrada">📥 Entrada / Agregar más insumos a la obra</option>
-                  <option value="Salida">📤 Salida / Registrar material utilizado en obra</option>
-                </select>
-              </div>
-
-              <div className="input-group">
-                <label>Cantidad requerida</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  value={cantidad}
-                  onChange={(e) => setCantidad(e.target.value ? Number(e.target.value) : '')}
-                  placeholder="Ej: 50"
-                  required
-                />
-              </div>
-
-              <button type="submit" className="btn-save" disabled={guardandoMovimiento || cargando}>
-                {guardandoMovimiento
-                  ? 'Guardando...'
-                  : tipoMovimiento === 'Entrada'
-                  ? '➕ Asignar / Sumar Material a la Obra'
-                  : '➖ Registrar Material Utilizado'}
-              </button>
-            </form>
-          </div>
-
-          {/* STOCK DISPONIBLE EN LA OBRA SELECCIONADA */}
-          <div className="card">
-            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3>
-                <i className="fas fa-warehouse"></i> Stock Actual de la Obra
-              </h3>
-              {proyectoSeleccionado && (
-                <button
-                  type="button"
-                  onClick={() => cargarStockObra(Number(proyectoSeleccionado))}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#666', fontSize: '12px' }}
-                >
-                  🔄 Actualizar
-                </button>
-              )}
-            </div>
-
-            <div className="project-container">
-              {!proyectoSeleccionado ? (
-                <div className="empty-msg">Selecciona una obra para consultar sus materiales en stock.</div>
-              ) : stockObra.length === 0 ? (
-                <div className="empty-msg">
-                  Esta obra aún no tiene materiales asignados. Usa el formulario de la izquierda para agregar los insumos necesarios.
-                </div>
-              ) : (
-                stockObra.map((item) => (
-                  <div key={item.material_id} className="project-item">
-                    <div>
-                      <h4 style={{ margin: '0 0 4px 0' }}>{getNombreMaterial(item.material_id)}</h4>
-                      <span style={{ fontSize: '13px', color: '#666' }}>
-                        Unidad: {getUnidadMaterial(item.material_id)}
-                      </span>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <span
-                        style={{
-                          backgroundColor: item.cantidad_disponible > 0 ? '#dcfce7' : '#fee2e2',
-                          color: item.cantidad_disponible > 0 ? '#15803d' : '#b91c1c',
-                          padding: '6px 14px',
-                          borderRadius: '20px',
-                          fontWeight: 800,
-                          fontSize: '14px',
-                          display: 'inline-block',
-                        }}
-                      >
-                        {item.cantidad_disponible} {getUnidadMaterial(item.material_id)}
-                      </span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+      {esVisualizador && (
+        <div style={{
+          backgroundColor: 'rgba(74, 222, 128, 0.12)',
+          border: '1px solid rgba(74, 222, 128, 0.35)',
+          color: '#4ade80',
+          padding: '12px 18px',
+          borderRadius: '10px',
+          marginBottom: '20px',
+          fontSize: '13px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+        }}>
+          <i className="fas fa-eye" style={{ fontSize: '16px' }}></i>
+          <span><strong>Modo Visualizador (Solo Lectura):</strong> Consulta el catálogo de materiales y el seguimiento de solicitudes sin modificar inventarios ni aprobar pedidos.</span>
         </div>
       )}
 
-      {/* SUB-PESTAÑA 2: HISTORIAL DE MATERIALES UTILIZADOS (KARDEX COMPLETO) */}
-      {subTab === 'historial' && (
-        <div className="card" style={{ padding: '24px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', flexWrap: 'wrap', gap: '10px' }}>
-            <div>
-              <h3 style={{ margin: '0 0 4px 0' }}>
-                <i className="fas fa-clipboard-list"></i> Historial de Movimientos de Insumos
-              </h3>
-              <p style={{ margin: 0, color: '#64748b', fontSize: '13px' }}>
-                Auditoría detallada de entradas y materiales utilizados en las diferentes obras de construcción.
-              </p>
+      <div className="grid" style={{ gridTemplateColumns: esAdministrador ? undefined : '1fr' }}>
+        {esAdministrador && <div className="card">
+          <div className="card-header"><h3><i className={editando ? 'fas fa-pen' : 'fas fa-plus-circle'}></i> {editando ? 'Editar material' : 'Crear material'}</h3></div>
+          <form onSubmit={handleSubmit}>
+            <div className="input-group">
+              <label>Nombre del material</label>
+              <input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Ej: Cemento Gris ARGOS" required />
             </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <label style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>Filtrar por obra:</label>
-              <select
-                value={filtroObraHistorial}
-                onChange={(e) => setFiltroObraHistorial(e.target.value ? Number(e.target.value) : '')}
-                style={{
-                  padding: '8px 12px',
-                  borderRadius: '6px',
-                  border: '1px solid #cbd5e1',
-                  fontSize: '13px',
-                }}
-              >
-                <option value="">-- Todas las Obras --</option>
-                {proyectos.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.nombre_proyecto}
-                  </option>
-                ))}
+            <div className="input-group">
+              <label>Unidad de medida</label>
+              <select value={unidad} onChange={(e) => setUnidad(e.target.value)} required>
+                <option value="">Selecciona una unidad</option>
+                {editando && unidad && !UNIDADES_MEDIDA.includes(unidad) && <option value={unidad}>{unidad}</option>}
+                {UNIDADES_MEDIDA.map((opcion) => <option key={opcion} value={opcion}>{opcion}</option>)}
               </select>
-              <button
-                type="button"
-                onClick={cargarHistorial}
-                style={{
-                  backgroundColor: '#000',
-                  color: '#ffd60a',
-                  border: 'none',
-                  padding: '8px 14px',
-                  borderRadius: '6px',
-                  fontWeight: 700,
-                  fontSize: '13px',
-                  cursor: 'pointer',
-                }}
-              >
-                🔄 Refrescar
-              </button>
             </div>
-          </div>
+            {!editando && <div className="input-group">
+              <label>Cantidad inicial</label>
+              <input type="number" min="0" step="0.01" value={cantidadInicial} onChange={(e) => setCantidadInicial(e.target.value)} placeholder="Ej: 50" required />
+              <small style={{ color: '#666' }}>La cantidad se registra en el inventario usando la unidad indicada.</small>
+            </div>}
+            <button type="submit" className="btn-save" disabled={guardando}>
+              {guardando ? 'Guardando...' : editando ? 'Guardar cambios' : 'Crear material'}
+            </button>
+            {editando && <button type="button" className="btn-secondary" onClick={limpiarFormulario}>Cancelar edición</button>}
+          </form>
+        </div>}
 
-          {cargandoHistorial ? (
-            <div style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>
-              Cargando historial de materiales...
-            </div>
-          ) : historial.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '30px', color: '#64748b', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
-              No hay registros de movimientos en el historial aún.
-            </div>
-          ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                <thead>
-                  <tr style={{ backgroundColor: '#f1f5f9', color: '#1e293b' }}>
-                    <th style={{ padding: '12px 16px', borderBottom: '1px solid #cbd5e1' }}>Fecha y Hora</th>
-                    <th style={{ padding: '12px 16px', borderBottom: '1px solid #cbd5e1' }}>Obra / Proyecto</th>
-                    <th style={{ padding: '12px 16px', borderBottom: '1px solid #cbd5e1' }}>Material</th>
-                    <th style={{ padding: '12px 16px', borderBottom: '1px solid #cbd5e1' }}>Tipo de Movimiento</th>
-                    <th style={{ padding: '12px 16px', borderBottom: '1px solid #cbd5e1' }}>Cantidad</th>
-                    <th style={{ padding: '12px 16px', borderBottom: '1px solid #cbd5e1' }}>ID Registro</th>
+        <div className="card">
+          <div className="card-header"><h3><i className="fas fa-search"></i> Buscar en catálogo</h3></div>
+          <div style={{ padding: 20 }}>
+            <input className="search-input" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Buscar por material o unidad..." />
+          </div>
+          {cargando ? <div className="empty-msg">Cargando catálogo...</div> : materialesFiltrados.length === 0 ? <div className="empty-msg">No hay materiales que coincidan.</div> : (
+            <div className="table-card" style={{ marginTop: 0 }}>
+              <table>
+                <thead><tr><th>Material</th><th>Cantidad inicial</th><th>Unidad</th>{esAdministrador && <th>Acciones</th>}</tr></thead>
+                <tbody>{materialesFiltrados.map((m) => (
+                  <tr key={m.id}>
+                    <td><strong>{m.nombre_material}</strong></td>
+                    <td>{m.cantidad_inicial}</td>
+                    <td>{m.unidad_medida}</td>
+                    {esAdministrador && <td className="actions-cell">
+                      <button className="btn-edit" onClick={() => iniciarEdicion(m)}><i className="fas fa-pen"></i></button>
+                      <button className="btn-delete" onClick={() => eliminarMaterial(m.id, m.nombre_material)}><i className="fas fa-trash"></i></button>
+                    </td>}
                   </tr>
-                </thead>
-                <tbody>
-                  {historial.map((h) => {
-                    const esEntrada = h.tipo_movimiento === 'Entrada';
-                    return (
-                      <tr key={h.id}>
-                        <td style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9', fontSize: '13px', color: '#475569' }}>
-                          {new Date(h.fecha_movimiento).toLocaleString()}
-                        </td>
-                        <td style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9', fontWeight: 600, color: '#0f172a' }}>
-                          {getNombreProyecto(h.proyecto_id)}
-                        </td>
-                        <td style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9' }}>
-                          {getNombreMaterial(h.material_id)}
-                        </td>
-                        <td style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9' }}>
-                          <span
-                            style={{
-                              backgroundColor: esEntrada ? '#dcfce7' : '#fee2e2',
-                              color: esEntrada ? '#15803d' : '#b91c1c',
-                              padding: '4px 10px',
-                              borderRadius: '6px',
-                              fontSize: '12px',
-                              fontWeight: 700,
-                            }}
-                          >
-                            {esEntrada ? '📥 Entrada / Suministro' : '📤 Salida / Utilizado en Obra'}
-                          </span>
-                        </td>
-                        <td style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9', fontWeight: 700 }}>
-                          {h.cantidad} {getUnidadMaterial(h.material_id)}
-                        </td>
-                        <td style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9', color: '#94a3b8', fontSize: '12px' }}>
-                          #{h.id}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
+                ))}</tbody>
               </table>
             </div>
           )}
         </div>
-      )}
+      </div>
 
-      {/* SUB-PESTAÑA 3: CATÁLOGO DE MATERIALES */}
-      {subTab === 'catalogo' && (
-        <div className="grid">
-          <div className="card">
-            <div className="card-header">
-              <h3>
-                <i className="fas fa-plus-circle"></i> Nuevo Material al Catálogo
-              </h3>
-            </div>
-            <form onSubmit={handleCrearCatalogo}>
-              <div className="input-group">
-                <label>Nombre del material</label>
-                <input
-                  type="text"
-                  value={nombre}
-                  onChange={(e) => setNombre(e.target.value)}
-                  placeholder="Ej: Cemento Gris ARGOS, Varilla 1/2, Arena..."
-                  required
-                />
-              </div>
-              <div className="input-group">
-                <label>Unidad de medida</label>
-                <input
-                  type="text"
-                  value={unidad}
-                  onChange={(e) => setUnidad(e.target.value)}
-                  placeholder="Ej: Bultos, Metros, Toneladas, Galones..."
-                  required
-                />
-              </div>
-              <button type="submit" className="btn-save" disabled={guardandoCatalogo}>
-                {guardandoCatalogo ? 'Guardando...' : 'Agregar al Catálogo'}
-              </button>
-            </form>
-          </div>
+      <div className="card" style={{ marginTop: 30 }}>
+        <div className="card-header"><h3><i className="fas fa-file-circle-plus"></i> Solicitudes de materiales</h3></div>
+        {puedeCrearSolicitud && <form onSubmit={crearSolicitud} className="form-horizontal request-form">
+          <div className="input-group"><label>Material</label><select value={materialSolicitud} onChange={(e) => setMaterialSolicitud(e.target.value)} required><option value="">Selecciona un material</option>{materiales.map((m) => <option key={m.id} value={m.id}>{m.nombre_material} ({m.unidad_medida})</option>)}</select></div>
+          <div className="input-group"><label>Cantidad</label><input type="number" min="0.01" step="0.01" value={cantidadSolicitud} onChange={(e) => setCantidadSolicitud(e.target.value)} required /></div>
+          <button type="submit" className="btn-save" disabled={guardandoSolicitud}>{guardandoSolicitud ? 'Enviando...' : 'Crear solicitud'}</button>
+        </form>}
 
-          <div className="card">
-            <div className="card-header">
-              <h3>
-                <i className="fas fa-list"></i> Materiales Registrados en el Sistema
-              </h3>
-            </div>
-            <div className="project-container">
-              {cargando && <div className="empty-msg">Cargando materiales...</div>}
-              {!cargando && materiales.length === 0 && (
-                <div className="empty-msg">Todavía no hay materiales en el catálogo.</div>
-              )}
-              {!cargando &&
-                materiales.map((m) => (
-                  <div key={m.id} className="project-item">
-                    <div>
-                      <h4>{m.nombre_material}</h4>
-                      <span style={{ fontSize: '12px', color: '#666' }}>Unidad: {m.unidad_medida}</span>
-                    </div>
-                    <span style={{ fontSize: '12px', color: '#94a3b8' }}>ID: #{m.id}</span>
-                  </div>
-                ))}
-            </div>
-          </div>
+        <div className="table-card" style={{ marginTop: 0 }}>
+          {solicitudes.length === 0 ? <div className="empty-msg">Todavía no hay solicitudes registradas.</div> : (
+            <table>
+              <thead><tr><th>Proyecto</th><th>Material</th><th>Cantidad</th><th>Estado</th><th>Historial / fecha</th>{esAdministrador && <th>Acciones</th>}</tr></thead>
+              <tbody>{solicitudes.map((s) => (
+                <tr key={s.id}>
+                  <td>{proyectoNombre || `#${s.proyecto_id}`}</td>
+                  <td>{s.material_nombre || `#${s.material_id}`}</td>
+                  <td>{s.cantidad} {s.unidad_medida || ''}</td>
+                  <td><span className={estadoClass(s.estado)}>{s.estado}</span></td>
+                  <td>{new Date(s.fecha_solicitud).toLocaleString()}</td>
+                  {esAdministrador && <td className="actions-cell">
+                    {s.estado === 'Pendiente' && <><button className="btn-small" onClick={() => cambiarEstado(s, 'Aprobada')}>Aprobar</button><button className="btn-small danger" onClick={() => cambiarEstado(s, 'Rechazada')}>Rechazar</button></>}
+                    {s.estado === 'Aprobada' && <button className="btn-small" onClick={() => cambiarEstado(s, 'Entregada')}>Entregar</button>}
+                  </td>}
+                </tr>
+              ))}</tbody>
+            </table>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 };
-

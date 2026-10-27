@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import logoImg from '../assets/logo.png';
 
 interface RegistroProps {
   onRegistrar?: (datos: {
@@ -8,41 +7,42 @@ interface RegistroProps {
     apellido: string;
     correo: string;
     telefono: string;
-    usuario: string;
     contrasena: string;
   }) => void;
   onVolver?: () => void;
 }
 
-const API_URL = 'http://localhost:8000';
+const API_URL = 'http://127.0.0.1:8000/api';
+
+const validarContrasena = (valor: string): string | null => {
+  if (valor.length < 8) {
+    return 'La contraseña debe tener al menos 8 caracteres.';
+  }
+  if (!/[A-Z]/.test(valor)) {
+    return 'La contraseña debe tener al menos una letra mayúscula.';
+  }
+  if (!/[0-9]/.test(valor)) {
+    return 'La contraseña debe tener al menos un número.';
+  }
+  return null;
+};
 
 const Registro: React.FC<RegistroProps> = ({ onRegistrar, onVolver }) => {
+
   const [nombre, setNombre] = useState('');
   const [apellido, setApellido] = useState('');
   const [correo, setCorreo] = useState('');
   const [telefono, setTelefono] = useState('');
-  const [usuario, setUsuario] = useState('');
   const [contrasena, setContrasena] = useState('');
   const [cargando, setCargando] = useState(false);
-
-  // Validación de seguridad de contraseña
-  const tieneLetras = /[a-zA-Z]/.test(contrasena);
-  const tieneNumeros = /[0-9]/.test(contrasena);
-  const tieneSimbolos = /[^a-zA-Z0-9]/.test(contrasena);
-  const longitudMinima = contrasena.length >= 8;
-  const contrasenaValida = longitudMinima && tieneLetras && tieneNumeros && tieneSimbolos;
+  const [verContrasena, setVerContrasena] = useState(false);
 
   const manejarRegistro = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!contrasenaValida) {
-      alert(
-        '⚠️ La contraseña no cumple con los requisitos de seguridad requeridos:\n\n' +
-        '• Mínimo 8 caracteres\n' +
-        '• Debe contener letras (A-Z o a-z)\n' +
-        '• Debe contener números (0-9)\n' +
-        '• Debe contener caracteres especiales / símbolos (ej: *, #, @, $, !)'
-      );
+    const errorContrasena = validarContrasena(contrasena);
+    if (errorContrasena) {
+      alert(errorContrasena);
       return;
     }
 
@@ -55,20 +55,19 @@ const Registro: React.FC<RegistroProps> = ({ onRegistrar, onVolver }) => {
         nombre_completo: nombreCompleto,
         correo_electronico: correo.trim(),
         contrasena: contrasena,
-        rol: 3, // Operario / Usuario estándar por defecto
+        rol: 3, // Operario por defecto
       });
 
       alert(
-        `✅ REGISTRO COMPLETADO EN LA BASE DE DATOS POSTGRESQL\n\n` +
+        `✅ REGISTRO COMPLETADO EN LA BASE DE DATOS\n\n` +
         `ID de Usuario: #${respuesta.data.id}\n` +
         `Nombre: ${respuesta.data.nombre_completo}\n` +
-        `Correo: ${respuesta.data.correo_electronico}\n` +
-        `Rol asignado: Operario / Usuario (Estándar)\n\n` +
-        `¡Ya puedes iniciar sesión con tu correo y contraseña!`
+        `Correo: ${respuesta.data.correo_electronico}\n\n` +
+        `¡Ya puedes iniciar sesión con tu cuenta!`
       );
 
       if (onRegistrar) {
-        onRegistrar({ nombre, apellido, correo, telefono, usuario, contrasena });
+        onRegistrar({ nombre, apellido, correo, telefono, contrasena });
       } else if (onVolver) {
         onVolver();
       }
@@ -83,57 +82,26 @@ const Registro: React.FC<RegistroProps> = ({ onRegistrar, onVolver }) => {
 
   return (
     <div style={estilos.contenedor}>
+
       <div style={estilos.formulario}>
-        {/* LOGO DE TITAN V + TÍTULO */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '14px', marginBottom: '12px' }}>
-          <div style={{
-            width: '48px',
-            height: '48px',
-            borderRadius: '50%',
-            backgroundColor: '#141414',
-            border: '2px solid #ffcc00',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            overflow: 'hidden',
-            boxShadow: '0 0 12px rgba(255, 204, 0, 0.35)',
-            flexShrink: 0,
-          }}>
-            <img src={logoImg} alt="Titan V Logo" style={{ width: '82%', height: '82%', objectFit: 'contain' }} />
-          </div>
-          <h1 style={{ ...estilos.titulo, margin: 0 }}>
-            TITAN <span style={estilos.acento}>V</span>
-          </h1>
-        </div>
+
+        <h1 style={estilos.titulo}>
+          TITAN <span style={estilos.acento}>V</span>
+        </h1>
 
         <p style={estilos.subtitulo}>
-          Crear una nueva cuenta en el sistema de gestión de obra
+          Crear una nueva cuenta
         </p>
 
-        {/* AVISO DE CAMPOS OBLIGATORIOS */}
-        <div style={{
-          backgroundColor: 'rgba(255, 214, 10, 0.1)',
-          border: '1px solid rgba(255, 214, 10, 0.3)',
-          borderRadius: '8px',
-          padding: '10px 14px',
-          marginBottom: '20px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          color: '#ffd60a',
-          fontSize: '12px',
-          fontWeight: 600,
-        }}>
-          <i className="fas fa-info-circle" style={{ fontSize: '14px' }}></i>
-          <span>Los campos marcados con <strong style={{ color: '#ff4d4f', fontSize: '14px' }}>*</strong> son obligatorios para completar tu registro.</span>
-        </div>
-
         <form onSubmit={manejarRegistro}>
+
           <div style={estilos.fila}>
+
             <div style={estilos.grupo}>
               <label style={estilos.label}>
-                Nombre <span style={{ color: '#ff4d4f', fontWeight: 'bold' }}>*</span>
+                Nombre
               </label>
+
               <input
                 type="text"
                 placeholder="Tu nombre"
@@ -146,8 +114,9 @@ const Registro: React.FC<RegistroProps> = ({ onRegistrar, onVolver }) => {
 
             <div style={estilos.grupo}>
               <label style={estilos.label}>
-                Apellido <span style={{ color: '#ff4d4f', fontWeight: 'bold' }}>*</span>
+                Apellido
               </label>
+
               <input
                 type="text"
                 placeholder="Tu apellido"
@@ -157,12 +126,14 @@ const Registro: React.FC<RegistroProps> = ({ onRegistrar, onVolver }) => {
                 style={estilos.input}
               />
             </div>
+
           </div>
 
           <div style={estilos.grupo}>
             <label style={estilos.label}>
-              Correo electrónico <span style={{ color: '#ff4d4f', fontWeight: 'bold' }}>*</span>
+              Correo electrónico
             </label>
+
             <input
               type="email"
               placeholder="correo@ejemplo.com"
@@ -175,8 +146,9 @@ const Registro: React.FC<RegistroProps> = ({ onRegistrar, onVolver }) => {
 
           <div style={estilos.grupo}>
             <label style={estilos.label}>
-              Número de teléfono <span style={{ color: '#ff4d4f', fontWeight: 'bold' }}>*</span>
+              Número de teléfono
             </label>
+
             <input
               type="tel"
               placeholder="300 000 0000"
@@ -189,59 +161,66 @@ const Registro: React.FC<RegistroProps> = ({ onRegistrar, onVolver }) => {
 
           <div style={estilos.grupo}>
             <label style={estilos.label}>
-              Nombre de usuario <span style={{ color: '#ff4d4f', fontWeight: 'bold' }}>*</span>
+              Contraseña
             </label>
-            <input
-              type="text"
-              placeholder="Elige un usuario"
-              value={usuario}
-              onChange={(e) => setUsuario(e.target.value)}
-              required
-              style={estilos.input}
-            />
-          </div>
 
-          <div style={estilos.grupo}>
-            <label style={estilos.label}>
-              Contraseña <span style={{ color: '#ff4d4f', fontWeight: 'bold' }}>*</span>
-            </label>
-            <input
-              type="password"
-              placeholder="Mínimo 8 caracteres (letras, números y símbolos)"
-              value={contrasena}
-              onChange={(e) => setContrasena(e.target.value)}
-              required
-              style={estilos.input}
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                type={verContrasena ? 'text' : 'password'}
+                placeholder="Crea una contraseña"
+                value={contrasena}
+                onChange={(e) => setContrasena(e.target.value)}
+                required
+                style={{ ...estilos.input, paddingRight: '40px' }}
+              />
 
-            {/* LISTA DE REQUISITOS DE CONTRASEÑA EN TIEMPO REAL */}
-            <div style={{
-              marginTop: '8px',
-              padding: '10px 12px',
-              backgroundColor: '#161616',
-              borderRadius: '6px',
-              border: '1px solid #333',
-              fontSize: '11px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '4px',
-            }}>
-              <span style={{ color: '#888', fontWeight: 700, marginBottom: '2px' }}>
-                Requisitos de seguridad de la contraseña:
-              </span>
-              <span style={{ color: longitudMinima ? '#4ade80' : '#888' }}>
-                {longitudMinima ? '✓' : '○'} Mínimo 8 caracteres
-              </span>
-              <span style={{ color: tieneLetras ? '#4ade80' : '#888' }}>
-                {tieneLetras ? '✓' : '○'} Debe contener letras (A-Z, a-z)
-              </span>
-              <span style={{ color: tieneNumeros ? '#4ade80' : '#888' }}>
-                {tieneNumeros ? '✓' : '○'} Debe contener números (0-9)
-              </span>
-              <span style={{ color: tieneSimbolos ? '#4ade80' : '#888' }}>
-                {tieneSimbolos ? '✓' : '○'} Debe contener símbolos especiales (*, #, @, $, !, etc.)
-              </span>
+              <button
+                type="button"
+                onClick={() => setVerContrasena(!verContrasena)}
+                aria-label={verContrasena ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                style={{
+                  position: 'absolute',
+                  right: '8px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  color: '#aaa',
+                  cursor: 'pointer',
+                  padding: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                {verContrasena ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                    <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" />
+                    <line x1="1" y1="1" x2="23" y2="23" />
+                  </svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                )}
+              </button>
             </div>
+
+            {contrasena.length > 0 && (
+              <ul style={estilos.listaRequisitos}>
+                <li style={contrasena.length >= 8 ? estilos.requisitoOk : estilos.requisitoFalta}>
+                  {contrasena.length >= 8 ? '✓' : '○'} Mínimo 8 caracteres
+                </li>
+                <li style={/[A-Z]/.test(contrasena) ? estilos.requisitoOk : estilos.requisitoFalta}>
+                  {/[A-Z]/.test(contrasena) ? '✓' : '○'} Al menos una mayúscula
+                </li>
+                <li style={/[0-9]/.test(contrasena) ? estilos.requisitoOk : estilos.requisitoFalta}>
+                  {/[0-9]/.test(contrasena) ? '✓' : '○'} Al menos un número
+                </li>
+              </ul>
+            )}
           </div>
 
           <button
@@ -275,12 +254,15 @@ const Registro: React.FC<RegistroProps> = ({ onRegistrar, onVolver }) => {
               ← Volver al inicio de sesión
             </button>
           )}
+
         </form>
 
         <p style={estilos.pie}>
-          Al crear tu cuenta aceptas nuestros términos y condiciones de servicio Titan V.
+          Al crear tu cuenta aceptas nuestros términos y condiciones.
         </p>
+
       </div>
+
     </div>
   );
 };
@@ -377,7 +359,24 @@ const estilos = {
     fontSize: '11px',
     marginTop: '20px',
     lineHeight: '1.5'
-  }
+  },
+
+  listaRequisitos: {
+    listStyle: 'none',
+    padding: 0,
+    margin: '8px 0 0 0',
+    fontSize: '12px',
+  },
+
+  requisitoOk: {
+    color: '#4ade80',
+    marginBottom: '3px',
+  },
+
+  requisitoFalta: {
+    color: '#888',
+    marginBottom: '3px',
+  },
 
 };
 

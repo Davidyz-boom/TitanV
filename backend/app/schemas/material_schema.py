@@ -7,25 +7,48 @@ from app.models import TipoMovimiento
 
 
 class MaterialBase(BaseModel):
-    nombre_material: str = Field(..., max_length=100, example="Cemento Gris ARGOS")
-    unidad_medida: str = Field(..., max_length=20, example="Bultos")
+    nombre_material: str = Field(
+        ...,
+        max_length=100,
+        example="Cemento Gris ARGOS"
+    )
+    unidad_medida: str = Field(
+        ...,
+        max_length=20,
+        example="Bultos"
+    )
 
 
 class MaterialCreate(MaterialBase):
-    """Esquema para registrar un nuevo tipo de material en el sistema."""
+    """Datos para crear un material dentro de un proyecto."""
 
-    pass
+    proyecto_id: int
+
+    cantidad_inicial: float = Field(
+        default=0,
+        ge=0,
+        description="Cantidad inicial que se registrará en el inventario"
+    )
 
 
 class MaterialUpdate(BaseModel):
-    """No existía: el PUT usaba MaterialCreate y obligaba a reenviar todos los campos."""
+    """Datos opcionales para editar un material."""
 
-    nombre_material: Optional[str] = Field(None, max_length=100)
-    unidad_medida: Optional[str] = Field(None, max_length=20)
+    nombre_material: Optional[str] = Field(
+        None,
+        max_length=100
+    )
+    unidad_medida: Optional[str] = Field(
+        None,
+        max_length=20
+    )
 
 
 class MaterialResponse(MaterialBase):
     id: int
+    proyecto_id: Optional[int] = None
+    cantidad_inicial: float = 0
+    cantidad_disponible: float = 0
 
     class Config:
         from_attributes = True
@@ -37,7 +60,11 @@ class RegistroMovimiento(BaseModel):
     material_id: int
     proyecto_id: int
     tipo_movimiento: TipoMovimiento
-    cantidad: float = Field(..., gt=0, description="La cantidad debe ser mayor a cero")
+    cantidad: float = Field(
+        ...,
+        gt=0,
+        description="La cantidad debe ser mayor a cero"
+    )
 
 
 class InventarioResponse(BaseModel):
@@ -46,6 +73,8 @@ class InventarioResponse(BaseModel):
     proyecto_id: int
     material_id: int
     cantidad_disponible: float
+    material_nombre: Optional[str] = None
+    unidad_medida: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -61,6 +90,10 @@ class KardexResponse(BaseModel):
     tipo_movimiento: TipoMovimiento
     cantidad: float
     fecha_movimiento: datetime
+    material_nombre: Optional[str] = None
+    unidad_medida: Optional[str] = None
+    usuario_nombre: Optional[str] = None
+    proyecto_nombre: Optional[str] = None
 
     class Config:
         from_attributes = True

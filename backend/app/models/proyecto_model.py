@@ -34,6 +34,7 @@ class ProyectoObra(Base):
     historial_movimientos = relationship(
         "HistorialMovimiento", back_populates="proyecto", cascade="all, delete-orphan"
     )
-    evidencias = relationship("EvidenciaMultimedia", back_populates="proyecto", cascade="all, delete-orphan")
     actas_campo = relationship("ActaCampo", back_populates="proyecto", cascade="all, delete-orphan")
     colaboradores = relationship("ProyectoColaborador", back_populates="proyecto", cascade="all, delete-orphan")
+    materiales = relationship("Material", back_populates="proyecto", cascade="all, delete-orphan")
+    solicitudes_materiales = relationship("SolicitudMaterial", back_populates="proyecto", cascade="all, delete-orphan")

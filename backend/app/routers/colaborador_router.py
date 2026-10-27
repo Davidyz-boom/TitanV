@@ -6,9 +6,9 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.core.permissions import verificar_rol_proyecto
-from app.models import RolColaborador, Usuario
-from app.schemas import ColaboradorInvitar, ColaboradorResponse, ColaboradorUpdate
-from app.services import colaborador_service, proyecto_service
+from app.models import RolColaborador, RolProyecto, Usuario
+from app.schemas import ColaboradorInvitar, ColaboradorResponse, ColaboradorUpdate, EnlaceInvitacionCreate, InvitacionCorreoResponse
+from app.services import colaborador_service, email_service, invitacion_service, proyecto_service
 
 router = APIRouter(prefix="/proyectos/{proyecto_id}/colaboradores", tags=["Colaboradores"])
 
@@ -29,22 +29,58 @@ def get_colaboradores(
     return colaborador_service.listar_colaboradores(db, proyecto_id)
 
 
-@router.post("/", response_model=ColaboradorResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=InvitacionCorreoResponse, status_code=status.HTTP_201_CREATED)
 def add_colaborador(
     proyecto_id: int,
     datos: ColaboradorInvitar,
     current_user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Solo el Arquitecto del proyecto puede agregar colaboradores. Se invita por
-    correo (la persona debe tener cuenta creada en Titan V de antemano)."""
+    """Solo el Arquitecto puede invitar. Crea un enlace de invitación con el rol
+    elegido y envía un correo a la persona con el link; quien lo abre se une al
+    proyecto (no es necesario que tenga cuenta creada todavía)."""
     _validar_proyecto(db, proyecto_id)
     verificar_rol_proyecto(db, current_user, proyecto_id, RolColaborador.ARQUITECTO)
 
+    if datos.rol == RolProyecto.ARQUITECTO:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Solo puedes invitar con los roles Trabajador o Visualizador.",
+        )
+
+    enlace = invitacion_service.crear_enlace(
+        db, proyecto_id, current_user.id_usuario, EnlaceInvitacionCreate(rol=datos.rol)
+    )
+    enlace_url = email_service.construir_url_invitacion(enlace.token)
+
+    correo_enviado = False
+    motivo = ""
     try:
-        return colaborador_service.invitar_colaborador(db, proyecto_id, datos)
-    except ValueError as error:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error))
+        proyecto = proyecto_service.obtener_proyecto(db, proyecto_id)
+        email_service.enviar_correo_invitacion(
+            destinatario=str(datos.correo_electronico),
+            nombre_proyecto=proyecto.nombre_proyecto,
+            rol=datos.rol.value,
+            token=enlace.token,
+        )
+        correo_enviado = True
+    except email_service.EmailError as error:
+        # El enlace se creó y es válido; solo no llegó el correo. El Arquitecto
+        # puede copiar el enlace de la respuesta y compartirlo manualmente.
+        motivo = str(error)
+
+    mensaje = (
+        "Invitación enviada por correo a la persona invitada."
+        if correo_enviado
+        else f"No se pudo enviar el correo: {motivo}"
+    )
+    return InvitacionCorreoResponse(
+        correo_electronico=str(datos.correo_electronico),
+        rol=datos.rol,
+        enlace_url=enlace_url,
+        correo_enviado=correo_enviado,
+        mensaje=mensaje,
+    )
 
 
 @router.put("/{colaborador_id}", response_model=ColaboradorResponse)
